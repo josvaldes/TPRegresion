@@ -1,0 +1,23 @@
+---
+title: "TPRegresion"
+author: "Jose Valdes"
+date: "2023-06-05"
+output:
+   html_document:
+     toc: yes
+     code_folding: show
+     toc_float: yes
+     df_print: paged
+     theme: united
+     code_download: true
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+<br>
+
+## <span style="color:darkred">1.1. Correlación</span>
+
+<br>
