@@ -16,22 +16,31 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+```
+
+
+
 <br>
 
 ## <span style="color:darkred">1.1. Correlación</span>
 
 <br>
 
-Ejercicio 1.1. En el archivo grasacerdos.xlsx se encuentran los datos del peso
-vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones
-elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la
-provincia de Buenos Aires. Se pide
-(a) Dibujar el diagrama de dispersión e interpretarlo.
+### Ejercicio 1.1. En el archivo grasacerdos.xlsx se encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se pide
+
+### (a) Dibujar el diagrama de dispersión e interpretarlo.
 
 ```{r}
 library(readxl)
 library(ggplot2)
 library(MVN)
+library(gridExtra)
 
 grasacerdos<-read_excel("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/grasacerdos.xlsx")
 dim(grasacerdos)
@@ -50,7 +59,7 @@ ggplot(grasacerdos, aes(PV, EGD)) +
 
 No se observa corelación entre las variables
 
-(b) Calcular el coeficiente de correlación muestral y explíquelo.
+### (b) Calcular el coeficiente de correlación muestral y explíquelo.
 
 ```{r}
 
@@ -65,3 +74,76 @@ corCoeff <- cor(grasacerdos$PV,grasacerdos$EGD, method = "pearson")
 corCoeff
 ```
 La prueba de correlación de Pearson muestra que existe una correlación positiva débil entre las variables. Esto significa que hay una tendencia a que los valores de las variables aumenten juntos, pero la relación no es muy fuerte.
+
+### (c) ¿Hay suficiente evidencia para admitir asociación entre el peso y el espesor de grasa? (α = 0,05). Verifique los supuestos para decidir el indicador que va a utilizar.
+
+Para determinar si hay suficiente evidencia para admitir una asociación entre el peso y el espesor de grasa, es necesario verificar los supuestos y luego utilizar un indicador apropiado para evaluar la correlación entre las variables.
+
+A continuación, se describen los supuestos que se deben verificar antes de seleccionar el indicador:
+
+1 - Supuesto de normalidad: Se debe verificar si las variables peso y espesor de grasa siguen una distribución normal. Esto se puede hacer mediante métodos gráficos, como histogramas o gráficos de Q-Q, y pruebas estadísticas, como el test de normalidad (por ejemplo, el test de Shapiro-Wilk).
+
+2 - Supuesto de linealidad: Se debe verificar si la relación entre el peso y el espesor de grasa es lineal. Esto se puede explorar mediante un diagrama de dispersión o mediante técnicas de análisis exploratorio de datos.
+
+3 - Supuesto de homogeneidad de varianzas: Se debe verificar si la varianza del espesor de grasa es constante en diferentes niveles de peso. Esto se puede evaluar mediante gráficos de dispersión y pruebas estadísticas, como el test de Levene.
+
+Una vez que se han verificado los supuestos, puedes seleccionar un indicador apropiado para evaluar la asociación entre el peso y el espesor de grasa. Dado que estamos analizando una relación entre dos variables continuas, el coeficiente de correlación de Pearson sería un indicador adecuado.
+
+Para determinar si hay suficiente evidencia para admitir la asociación entre el peso y el espesor de grasa, se puede realizar una prueba de hipótesis utilizando el coeficiente de correlación de Pearson. El enunciado de las hipótesis sería:
+
+Hipótesis nula (H0): No hay asociación entre el peso y el espesor de grasa (ρ = 0).
+Hipótesis alternativa (HA): Hay asociación entre el peso y el espesor de grasa (ρ ≠ 0).
+
+```{r}
+corTest <- cor.test(grasacerdos$PV,grasacerdos$EGD, method = "pearson") 
+corTest
+```
+El resultado del test de correlación de Pearson como se mostró en el punto b corresponde a una correlacion positiva baja entre las variables y un P-valor de `r corTest$p.value` que seria mayor que el nivel de significancia $\alpha$ = 0,05 de la prueba, por tal razon, no se puede afirmar la presencia de una asociación significativa entre las variables.
+
+
+### Ejercicio 1.2. Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
+
+Se pide explorar los datos de la siguiente manera:
+
+## (a) Graficar los cuatro pares de datos en un diagrama de dispersión cada uno.
+
+```{r}
+# se observa que el archivo esta incompleto anscombe.xlsx (dimensiones 6x8), se busca en internet y se trabaja con Anscombe's Quartet.xlsx (dimensiones 12x8)
+anscombe<-read_excel("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/Anscombe's Quartet.xlsx")
+dim(anscombe)
+```
+
+```{r}
+head(anscombe)
+```
+
+```{r}
+dd1=ggplot(anscombe, aes(X1, X2)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X1 vs X2")
+dd1
+```
+
+```{r}
+dd2=ggplot(anscombe, aes(X3, X4)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X3 vs X4")
+dd2
+```
+```{r}
+dd3=ggplot(anscombe, aes(X5, X6)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X5 vs X6")
+dd3
+```
+
+```{r}
+dd4=ggplot(anscombe, aes(X7, X8)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X7 vs X8")
+dd4
+```
+
+```{r}
+#resumen
+grid.arrange(dd1,dd2,dd3,dd4, ncol = 2, nrow = 2)
+```
+
+
+## (b) Hallar los valores medios de las variables para cada para de datos.
