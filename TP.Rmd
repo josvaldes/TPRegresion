@@ -21,3 +21,47 @@ knitr::opts_chunk$set(echo = TRUE)
 ## <span style="color:darkred">1.1. Correlación</span>
 
 <br>
+
+Ejercicio 1.1. En el archivo grasacerdos.xlsx se encuentran los datos del peso
+vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones
+elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la
+provincia de Buenos Aires. Se pide
+(a) Dibujar el diagrama de dispersión e interpretarlo.
+
+```{r}
+library(readxl)
+library(ggplot2)
+library(MVN)
+
+grasacerdos<-read_excel("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/grasacerdos.xlsx")
+dim(grasacerdos)
+```
+
+```{r}
+head(grasacerdos)
+grasacerdos$PV <- as.numeric(gsub(",", ".", grasacerdos$PV))
+grasacerdos$EGD <- as.numeric(gsub(",", ".", grasacerdos$EGD))
+```
+```{r}
+ggplot(grasacerdos, aes(PV, EGD)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión Peso de Cerdos vs Grasa Dorsal")
+```
+
+
+No se observa corelación entre las variables
+
+(b) Calcular el coeficiente de correlación muestral y explíquelo.
+
+```{r}
+
+biNormTest <- mvn(grasacerdos, mvnTest = "hz")
+print(biNormTest$multivariateNormality)
+```
+
+Por el resultado se puede sostener el supuesto de una distribución normal bivariada para estas variables. En tal sentido, se procede a realizar el test de Pearson para determinar la relación de las variables:
+
+```{r}
+corCoeff <- cor(grasacerdos$PV,grasacerdos$EGD, method = "pearson")
+corCoeff
+```
+La prueba de correlación de Pearson muestra que existe una correlación positiva débil entre las variables. Esto significa que hay una tendencia a que los valores de las variables aumenten juntos, pero la relación no es muy fuerte.
