@@ -1,0 +1,403 @@
+% Options for packages loaded elsewhere
+\PassOptionsToPackage{unicode}{hyperref}
+\PassOptionsToPackage{hyphens}{url}
+%
+\documentclass[
+]{article}
+\usepackage{amsmath,amssymb}
+\usepackage{lmodern}
+\usepackage{iftex}
+\ifPDFTeX
+  \usepackage[T1]{fontenc}
+  \usepackage[utf8]{inputenc}
+  \usepackage{textcomp} % provide euro and other symbols
+\else % if luatex or xetex
+  \usepackage{unicode-math}
+  \defaultfontfeatures{Scale=MatchLowercase}
+  \defaultfontfeatures[\rmfamily]{Ligatures=TeX,Scale=1}
+\fi
+% Use upquote if available, for straight quotes in verbatim environments
+\IfFileExists{upquote.sty}{\usepackage{upquote}}{}
+\IfFileExists{microtype.sty}{% use microtype if available
+  \usepackage[]{microtype}
+  \UseMicrotypeSet[protrusion]{basicmath} % disable protrusion for tt fonts
+}{}
+\makeatletter
+\@ifundefined{KOMAClassName}{% if non-KOMA class
+  \IfFileExists{parskip.sty}{%
+    \usepackage{parskip}
+  }{% else
+    \setlength{\parindent}{0pt}
+    \setlength{\parskip}{6pt plus 2pt minus 1pt}}
+}{% if KOMA class
+  \KOMAoptions{parskip=half}}
+\makeatother
+\usepackage{xcolor}
+\usepackage[margin=1in]{geometry}
+\usepackage{color}
+\usepackage{fancyvrb}
+\newcommand{\VerbBar}{|}
+\newcommand{\VERB}{\Verb[commandchars=\\\{\}]}
+\DefineVerbatimEnvironment{Highlighting}{Verbatim}{commandchars=\\\{\}}
+% Add ',fontsize=\small' for more characters per line
+\usepackage{framed}
+\definecolor{shadecolor}{RGB}{248,248,248}
+\newenvironment{Shaded}{\begin{snugshade}}{\end{snugshade}}
+\newcommand{\AlertTok}[1]{\textcolor[rgb]{0.94,0.16,0.16}{#1}}
+\newcommand{\AnnotationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\AttributeTok}[1]{\textcolor[rgb]{0.77,0.63,0.00}{#1}}
+\newcommand{\BaseNTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\BuiltInTok}[1]{#1}
+\newcommand{\CharTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\CommentTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\CommentVarTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ConstantTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ControlFlowTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\DataTypeTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{#1}}
+\newcommand{\DecValTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\DocumentationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\ErrorTok}[1]{\textcolor[rgb]{0.64,0.00,0.00}{\textbf{#1}}}
+\newcommand{\ExtensionTok}[1]{#1}
+\newcommand{\FloatTok}[1]{\textcolor[rgb]{0.00,0.00,0.81}{#1}}
+\newcommand{\FunctionTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\ImportTok}[1]{#1}
+\newcommand{\InformationTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\newcommand{\KeywordTok}[1]{\textcolor[rgb]{0.13,0.29,0.53}{\textbf{#1}}}
+\newcommand{\NormalTok}[1]{#1}
+\newcommand{\OperatorTok}[1]{\textcolor[rgb]{0.81,0.36,0.00}{\textbf{#1}}}
+\newcommand{\OtherTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{#1}}
+\newcommand{\PreprocessorTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textit{#1}}}
+\newcommand{\RegionMarkerTok}[1]{#1}
+\newcommand{\SpecialCharTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\SpecialStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\StringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\VariableTok}[1]{\textcolor[rgb]{0.00,0.00,0.00}{#1}}
+\newcommand{\VerbatimStringTok}[1]{\textcolor[rgb]{0.31,0.60,0.02}{#1}}
+\newcommand{\WarningTok}[1]{\textcolor[rgb]{0.56,0.35,0.01}{\textbf{\textit{#1}}}}
+\usepackage{graphicx}
+\makeatletter
+\def\maxwidth{\ifdim\Gin@nat@width>\linewidth\linewidth\else\Gin@nat@width\fi}
+\def\maxheight{\ifdim\Gin@nat@height>\textheight\textheight\else\Gin@nat@height\fi}
+\makeatother
+% Scale images if necessary, so that they will not overflow the page
+% margins by default, and it is still possible to overwrite the defaults
+% using explicit options in \includegraphics[width, height, ...]{}
+\setkeys{Gin}{width=\maxwidth,height=\maxheight,keepaspectratio}
+% Set default figure placement to htbp
+\makeatletter
+\def\fps@figure{htbp}
+\makeatother
+\setlength{\emergencystretch}{3em} % prevent overfull lines
+\providecommand{\tightlist}{%
+  \setlength{\itemsep}{0pt}\setlength{\parskip}{0pt}}
+\setcounter{secnumdepth}{-\maxdimen} % remove section numbering
+\ifLuaTeX
+  \usepackage{selnolig}  % disable illegal ligatures
+\fi
+\IfFileExists{bookmark.sty}{\usepackage{bookmark}}{\usepackage{hyperref}}
+\IfFileExists{xurl.sty}{\usepackage{xurl}}{} % add URL line breaks if available
+\urlstyle{same} % disable monospaced font for URLs
+\hypersetup{
+  pdftitle={TPRegresion},
+  pdfauthor={Jose Valdes},
+  hidelinks,
+  pdfcreator={LaTeX via pandoc}}
+
+\title{TPRegresion}
+\author{Jose Valdes}
+\date{2023-06-05}
+
+\begin{document}
+\maketitle
+
+{
+\setcounter{tocdepth}{2}
+\tableofcontents
+}
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#limpio la memoria}
+\FunctionTok{rm}\NormalTok{( }\AttributeTok{list=} \FunctionTok{ls}\NormalTok{(}\AttributeTok{all.names=} \ConstantTok{TRUE}\NormalTok{) )  }\CommentTok{\#remove all objects}
+\FunctionTok{gc}\NormalTok{( }\AttributeTok{full=} \ConstantTok{TRUE}\NormalTok{ )                 }\CommentTok{\#garbage collection}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##          used (Mb) gc trigger (Mb) max used (Mb)
+## Ncells 463382 24.8    1001825 53.6   644245 34.5
+## Vcells 832758  6.4    8388608 64.0  1635137 12.5
+\end{verbatim}
+
+\hypertarget{correlaciuxf3n}{%
+\subsection{\texorpdfstring{{1.1.
+Correlación}}{1.1. Correlación}}\label{correlaciuxf3n}}
+
+\hypertarget{ejercicio-1.1.-en-el-archivo-grasacerdos.xlsx-se-encuentran-los-datos-del-peso-vivo-pv-en-kg-y-al-espesor-de-grasa-dorsal-egd-en-mm-de-30-lechones-elegidos-al-azar-de-una-poblaciuxf3n-de-porcinos-duroc-jersey-del-oeste-de-la-provincia-de-buenos-aires.-se-pide}{%
+\subsubsection{Ejercicio 1.1. En el archivo grasacerdos.xlsx se
+encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa
+dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de
+porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se
+pide}\label{ejercicio-1.1.-en-el-archivo-grasacerdos.xlsx-se-encuentran-los-datos-del-peso-vivo-pv-en-kg-y-al-espesor-de-grasa-dorsal-egd-en-mm-de-30-lechones-elegidos-al-azar-de-una-poblaciuxf3n-de-porcinos-duroc-jersey-del-oeste-de-la-provincia-de-buenos-aires.-se-pide}}
+
+\hypertarget{a-dibujar-el-diagrama-de-dispersiuxf3n-e-interpretarlo.}{%
+\subsubsection{(a) Dibujar el diagrama de dispersión e
+interpretarlo.}\label{a-dibujar-el-diagrama-de-dispersiuxf3n-e-interpretarlo.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{library}\NormalTok{(readxl)}
+\FunctionTok{library}\NormalTok{(ggplot2)}
+\FunctionTok{library}\NormalTok{(MVN)}
+\FunctionTok{library}\NormalTok{(gridExtra)}
+
+\NormalTok{grasacerdos}\OtherTok{\textless{}{-}}\FunctionTok{read\_excel}\NormalTok{(}\StringTok{"C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/grasacerdos.xlsx"}\NormalTok{)}
+\FunctionTok{dim}\NormalTok{(grasacerdos)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 30  3
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{head}\NormalTok{(grasacerdos)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 3
+##     Obs PV    EGD  
+##   <dbl> <chr> <chr>
+## 1     1 56,81 16,19
+## 2     2 70,40 22,00
+## 3     3 71,73 19,52
+## 4     4 75,10 31,00
+## 5     5 79,65 23,58
+## 6     6 51,43 16,58
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{grasacerdos}\SpecialCharTok{$}\NormalTok{PV }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{gsub}\NormalTok{(}\StringTok{","}\NormalTok{, }\StringTok{"."}\NormalTok{, grasacerdos}\SpecialCharTok{$}\NormalTok{PV))}
+\NormalTok{grasacerdos}\SpecialCharTok{$}\NormalTok{EGD }\OtherTok{\textless{}{-}} \FunctionTok{as.numeric}\NormalTok{(}\FunctionTok{gsub}\NormalTok{(}\StringTok{","}\NormalTok{, }\StringTok{"."}\NormalTok{, grasacerdos}\SpecialCharTok{$}\NormalTok{EGD))}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{ggplot}\NormalTok{(grasacerdos, }\FunctionTok{aes}\NormalTok{(PV, EGD)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Diagrama de Dispersión Peso de Cerdos vs Grasa Dorsal"}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-4-1.pdf}
+
+No se observa corelación entre las variables
+
+\hypertarget{b-calcular-el-coeficiente-de-correlaciuxf3n-muestral-y-expluxedquelo.}{%
+\subsubsection{(b) Calcular el coeficiente de correlación muestral y
+explíquelo.}\label{b-calcular-el-coeficiente-de-correlaciuxf3n-muestral-y-expluxedquelo.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{biNormTest }\OtherTok{\textless{}{-}} \FunctionTok{mvn}\NormalTok{(grasacerdos, }\AttributeTok{mvnTest =} \StringTok{"hz"}\NormalTok{)}
+\FunctionTok{print}\NormalTok{(biNormTest}\SpecialCharTok{$}\NormalTok{multivariateNormality)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##            Test        HZ   p value MVN
+## 1 Henze-Zirkler 0.6379234 0.3891766 YES
+\end{verbatim}
+
+Por el resultado se puede sostener el supuesto de una distribución
+normal bivariada para estas variables. En tal sentido, se procede a
+realizar el test de Pearson para determinar la relación de las
+variables:
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{corCoeff }\OtherTok{\textless{}{-}} \FunctionTok{cor}\NormalTok{(grasacerdos}\SpecialCharTok{$}\NormalTok{PV,grasacerdos}\SpecialCharTok{$}\NormalTok{EGD, }\AttributeTok{method =} \StringTok{"pearson"}\NormalTok{)}
+\NormalTok{corCoeff}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 0.2543434
+\end{verbatim}
+
+La prueba de correlación de Pearson muestra que existe una correlación
+positiva débil entre las variables. Esto significa que hay una tendencia
+a que los valores de las variables aumenten juntos, pero la relación no
+es muy fuerte.
+
+\hypertarget{c-hay-suficiente-evidencia-para-admitir-asociaciuxf3n-entre-el-peso-y-el-espesor-de-grasa-ux3b1-005.-verifique-los-supuestos-para-decidir-el-indicador-que-va-a-utilizar.}{%
+\subsubsection{(c) ¿Hay suficiente evidencia para admitir asociación
+entre el peso y el espesor de grasa? (α = 0,05). Verifique los supuestos
+para decidir el indicador que va a
+utilizar.}\label{c-hay-suficiente-evidencia-para-admitir-asociaciuxf3n-entre-el-peso-y-el-espesor-de-grasa-ux3b1-005.-verifique-los-supuestos-para-decidir-el-indicador-que-va-a-utilizar.}}
+
+Para determinar si hay suficiente evidencia para admitir una asociación
+entre el peso y el espesor de grasa, es necesario verificar los
+supuestos y luego utilizar un indicador apropiado para evaluar la
+correlación entre las variables.
+
+A continuación, se describen los supuestos que se deben verificar antes
+de seleccionar el indicador:
+
+1 - Supuesto de normalidad: Se debe verificar si las variables peso y
+espesor de grasa siguen una distribución normal. Esto se puede hacer
+mediante métodos gráficos, como histogramas o gráficos de Q-Q, y pruebas
+estadísticas, como el test de normalidad (por ejemplo, el test de
+Shapiro-Wilk).
+
+2 - Supuesto de linealidad: Se debe verificar si la relación entre el
+peso y el espesor de grasa es lineal. Esto se puede explorar mediante un
+diagrama de dispersión o mediante técnicas de análisis exploratorio de
+datos.
+
+3 - Supuesto de homogeneidad de varianzas: Se debe verificar si la
+varianza del espesor de grasa es constante en diferentes niveles de
+peso. Esto se puede evaluar mediante gráficos de dispersión y pruebas
+estadísticas, como el test de Levene.
+
+Una vez que se han verificado los supuestos, puedes seleccionar un
+indicador apropiado para evaluar la asociación entre el peso y el
+espesor de grasa. Dado que estamos analizando una relación entre dos
+variables continuas, el coeficiente de correlación de Pearson sería un
+indicador adecuado.
+
+Para determinar si hay suficiente evidencia para admitir la asociación
+entre el peso y el espesor de grasa, se puede realizar una prueba de
+hipótesis utilizando el coeficiente de correlación de Pearson. El
+enunciado de las hipótesis sería:
+
+Hipótesis nula (H0): No hay asociación entre el peso y el espesor de
+grasa (ρ = 0). Hipótesis alternativa (HA): Hay asociación entre el peso
+y el espesor de grasa (ρ ≠ 0).
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{corTest }\OtherTok{\textless{}{-}} \FunctionTok{cor.test}\NormalTok{(grasacerdos}\SpecialCharTok{$}\NormalTok{PV,grasacerdos}\SpecialCharTok{$}\NormalTok{EGD, }\AttributeTok{method =} \StringTok{"pearson"}\NormalTok{) }
+\NormalTok{corTest}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## 
+##  Pearson's product-moment correlation
+## 
+## data:  grasacerdos$PV and grasacerdos$EGD
+## t = 1.3916, df = 28, p-value = 0.175
+## alternative hypothesis: true correlation is not equal to 0
+## 95 percent confidence interval:
+##  -0.1166112  0.5630217
+## sample estimates:
+##       cor 
+## 0.2543434
+\end{verbatim}
+
+El resultado del test de correlación de Pearson como se mostró en el
+punto b corresponde a una correlacion positiva baja entre las variables
+y un P-valor de 0.1749942 que seria mayor que el nivel de significancia
+\(\alpha\) = 0,05 de la prueba, por tal razon, no se puede afirmar la
+presencia de una asociación significativa entre las variables.
+
+\hypertarget{ejercicio-1.2.-los-datos-del-cuarteto-de-anscombe-se-encuentran-en-el-archivo-anscombe.xlsx}{%
+\subsubsection{Ejercicio 1.2. Los datos del cuarteto de Anscombe se
+encuentran en el archivo
+anscombe.xlsx}\label{ejercicio-1.2.-los-datos-del-cuarteto-de-anscombe-se-encuentran-en-el-archivo-anscombe.xlsx}}
+
+Se pide explorar los datos de la siguiente manera:
+
+\hypertarget{a-graficar-los-cuatro-pares-de-datos-en-un-diagrama-de-dispersiuxf3n-cada-uno.}{%
+\subsection{(a) Graficar los cuatro pares de datos en un diagrama de
+dispersión cada
+uno.}\label{a-graficar-los-cuatro-pares-de-datos-en-un-diagrama-de-dispersiuxf3n-cada-uno.}}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\# se observa que el archivo esta incompleto anscombe.xlsx (dimensiones 6x8), se busca en internet y se trabaja con Anscombe\textquotesingle{}s Quartet.xlsx (dimensiones 12x8)}
+\NormalTok{anscombe}\OtherTok{\textless{}{-}}\FunctionTok{read\_excel}\NormalTok{(}\StringTok{"C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/Anscombe\textquotesingle{}s Quartet.xlsx"}\NormalTok{)}
+\FunctionTok{dim}\NormalTok{(anscombe)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## [1] 11  8
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\FunctionTok{head}\NormalTok{(anscombe)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+## # A tibble: 6 x 8
+##      X1    X2    X3    X4    X5    X6    X7    X8
+##   <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl> <dbl>
+## 1    10  8.04    10  9.14    10  7.46     8  6.58
+## 2     8  6.95     8  8.14     8  6.77     8  5.76
+## 3    13  7.58    13  8.74    13 12.7      8  7.71
+## 4     9  8.81     9  8.77     9  7.11     8  8.84
+## 5    11  8.33    11  9.26    11  7.81     8  8.47
+## 6    14  9.96    14  8.1     14  8.84     8  7.04
+\end{verbatim}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dd1}\OtherTok{=}\FunctionTok{ggplot}\NormalTok{(anscombe, }\FunctionTok{aes}\NormalTok{(X1, X2)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Diagrama de Dispersión X1 vs X2"}\NormalTok{)}
+\NormalTok{dd1}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-10-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dd2}\OtherTok{=}\FunctionTok{ggplot}\NormalTok{(anscombe, }\FunctionTok{aes}\NormalTok{(X3, X4)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Diagrama de Dispersión X3 vs X4"}\NormalTok{)}
+\NormalTok{dd2}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-11-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dd3}\OtherTok{=}\FunctionTok{ggplot}\NormalTok{(anscombe, }\FunctionTok{aes}\NormalTok{(X5, X6)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Diagrama de Dispersión X5 vs X6"}\NormalTok{)}
+\NormalTok{dd3}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-12-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\NormalTok{dd4}\OtherTok{=}\FunctionTok{ggplot}\NormalTok{(anscombe, }\FunctionTok{aes}\NormalTok{(X7, X8)) }\SpecialCharTok{+} 
+  \FunctionTok{geom\_point}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{theme\_minimal}\NormalTok{() }\SpecialCharTok{+} \FunctionTok{labs}\NormalTok{(}\AttributeTok{title =} \StringTok{"Diagrama de Dispersión X7 vs X8"}\NormalTok{)}
+\NormalTok{dd4}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-13-1.pdf}
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\CommentTok{\#resumen}
+\FunctionTok{grid.arrange}\NormalTok{(dd1,dd2,dd3,dd4, }\AttributeTok{ncol =} \DecValTok{2}\NormalTok{, }\AttributeTok{nrow =} \DecValTok{2}\NormalTok{)}
+\end{Highlighting}
+\end{Shaded}
+
+\includegraphics{TP_files/figure-latex/unnamed-chunk-14-1.pdf}
+
+\hypertarget{b-hallar-los-valores-medios-de-las-variables-para-cada-para-de-datos.}{%
+\subsection{(b) Hallar los valores medios de las variables para cada
+para de
+datos.}\label{b-hallar-los-valores-medios-de-las-variables-para-cada-para-de-datos.}}
+
+\end{document}

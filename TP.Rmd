@@ -1,15 +1,17 @@
 ---
-title: "TPRegresion"
+title: "Trabajo Practico Regresión Avanzada"
 author: "Jose Valdes"
 date: "2023-06-05"
 output:
-   html_document:
-     toc: yes
-     code_folding: show
-     toc_float: yes
-     df_print: paged
-     theme: united
-     code_download: true
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+  pdf_document:
+    toc: yes
 ---
 
 ```{r setup, include=FALSE}
@@ -32,7 +34,8 @@ gc( full= TRUE )                 #garbage collection
 
 <br>
 
-### Ejercicio 1.1. En el archivo grasacerdos.xlsx se encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se pide
+### Ejercicio 1.1. 
+En el archivo grasacerdos.xlsx se encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se pide
 
 ### (a) Dibujar el diagrama de dispersión e interpretarlo.
 
@@ -83,6 +86,32 @@ A continuación, se describen los supuestos que se deben verificar antes de sele
 
 1 - Supuesto de normalidad: Se debe verificar si las variables peso y espesor de grasa siguen una distribución normal. Esto se puede hacer mediante métodos gráficos, como histogramas o gráficos de Q-Q, y pruebas estadísticas, como el test de normalidad (por ejemplo, el test de Shapiro-Wilk).
 
+```{r}
+shapiro.test(grasacerdos$PV)
+```
+
+```{r}
+shapiro.test(grasacerdos$EGD)
+```
+
+```{r}
+par(mfrow = c(1, 2)) 
+qqnorm(grasacerdos$PV, main = "Peso", col = "darkred") 
+qqline(grasacerdos$PV) 
+qqnorm(grasacerdos$EGD, main = "Grasa dorsal", col = "blue") 
+qqline(grasacerdos$EGD)
+```
+```{r}
+par(mfrow = c(1, 2))
+hist(grasacerdos$PV, breaks = 10, main = "", xlab = "Peso", border = "darkred") 
+hist(grasacerdos$EGD, breaks = 10, main = "", xlab = "Grasa dorsal", border = "blue")
+```
+```{r}
+par(bg="white")
+pairs(grasacerdos) # representa todos los diagramas de dispersión de a pares
+```
+
+
 2 - Supuesto de linealidad: Se debe verificar si la relación entre el peso y el espesor de grasa es lineal. Esto se puede explorar mediante un diagrama de dispersión o mediante técnicas de análisis exploratorio de datos.
 
 3 - Supuesto de homogeneidad de varianzas: Se debe verificar si la varianza del espesor de grasa es constante en diferentes niveles de peso. Esto se puede evaluar mediante gráficos de dispersión y pruebas estadísticas, como el test de Levene.
@@ -101,7 +130,8 @@ corTest
 El resultado del test de correlación de Pearson como se mostró en el punto b corresponde a una correlacion positiva baja entre las variables y un P-valor de `r corTest$p.value` que seria mayor que el nivel de significancia $\alpha$ = 0,05 de la prueba, por tal razon, no se puede afirmar la presencia de una asociación significativa entre las variables.
 
 
-### Ejercicio 1.2. Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
+### Ejercicio 1.2. 
+Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
 
 Se pide explorar los datos de la siguiente manera:
 
