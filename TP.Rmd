@@ -25,6 +25,32 @@ knitr::opts_chunk$set(echo = TRUE)
 rm( list= ls(all.names= TRUE) )  #remove all objects
 gc( full= TRUE )                 #garbage collection
 ```
+Se realiza validación de la instalación de los paquetes necesarios para ejecutar el script
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+library(readxl)
+library(ggplot2)
+library(MVN)
+library(gridExtra)
+```
 
 
 
@@ -37,7 +63,7 @@ gc( full= TRUE )                 #garbage collection
 ### Ejercicio 1.1. 
 En el archivo grasacerdos.xlsx se encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se pide
 
-### (a) Dibujar el diagrama de dispersión e interpretarlo.
+## (a) Dibujar el diagrama de dispersión e interpretarlo.
 
 ```{r}
 library(readxl)
@@ -55,14 +81,19 @@ grasacerdos$PV <- as.numeric(gsub(",", ".", grasacerdos$PV))
 grasacerdos$EGD <- as.numeric(gsub(",", ".", grasacerdos$EGD))
 ```
 ```{r}
-ggplot(grasacerdos, aes(PV, EGD)) + 
-  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión Peso de Cerdos vs Grasa Dorsal")
+ggplot(grasacerdos, aes(PV, EGD)) +
+  geom_point() +
+  theme_minimal() +
+  labs(x = "Peso de Cerdos", y = "Grasa Dorsal",
+       title = ("Diagrama de Dispersi\u00F3n Peso de Cerdos vs Grasa Dorsal")) # se deja la letra "ó" con \u00F3, que                                                                             es la representación Unicode de esa letra
+
+
 ```
 
 
 No se observa corelación entre las variables
 
-### (b) Calcular el coeficiente de correlación muestral y explíquelo.
+## (b) Calcular el coeficiente de correlación muestral y explíquelo.
 
 ```{r}
 
@@ -78,7 +109,7 @@ corCoeff
 ```
 La prueba de correlación de Pearson muestra que existe una correlación positiva débil entre las variables. Esto significa que hay una tendencia a que los valores de las variables aumenten juntos, pero la relación no es muy fuerte.
 
-### (c) ¿Hay suficiente evidencia para admitir asociación entre el peso y el espesor de grasa? (α = 0,05). Verifique los supuestos para decidir el indicador que va a utilizar.
+## (c) ¿Hay suficiente evidencia para admitir asociación entre el peso y el espesor de grasa? (α = 0,05). Verifique los supuestos para decidir el indicador que va a utilizar.
 
 Para determinar si hay suficiente evidencia para admitir una asociación entre el peso y el espesor de grasa, es necesario verificar los supuestos y luego utilizar un indicador apropiado para evaluar la correlación entre las variables.
 
@@ -149,24 +180,25 @@ head(anscombe)
 
 ```{r}
 dd1=ggplot(anscombe, aes(X1, X2)) + 
-  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X1 vs X2")
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n X1 vs X2")
 dd1
+
 ```
 
 ```{r}
 dd2=ggplot(anscombe, aes(X3, X4)) + 
-  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X3 vs X4")
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n X3 vs X4")
 dd2
 ```
 ```{r}
 dd3=ggplot(anscombe, aes(X5, X6)) + 
-  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X5 vs X6")
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n X5 vs X6")
 dd3
 ```
 
 ```{r}
 dd4=ggplot(anscombe, aes(X7, X8)) + 
-  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersión X7 vs X8")
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n X7 vs X8")
 dd4
 ```
 
@@ -176,4 +208,101 @@ grid.arrange(dd1,dd2,dd3,dd4, ncol = 2, nrow = 2)
 ```
 
 
-## (b) Hallar los valores medios de las variables para cada para de datos.
+## (b) Hallar los valores medios de las variables para cada par de datos.
+
+```{r}
+colMeans(anscombe)
+```
+
+## (c) Hallar los valores de la dispersión para cada conjunto de datos.
+
+```{r}
+sapply(anscombe, sd)
+```
+
+## (d) Hallar el coeficiente muestral de correlación lineal en cada caso.
+
+```{r}
+mvn(data = anscombe[c(1,2)], mvnTest = "hz")$multivariateNormality$MVN
+mvn(data = anscombe[c(3,4)], mvnTest = "hz")$multivariateNormality$MVN
+mvn(data = anscombe[c(5,6)], mvnTest = "hz")$multivariateNormality$MVN
+mvn(data = anscombe[c(7,8)], mvnTest = "hz")$multivariateNormality$MVN
+cor.test(anscombe$X1,anscombe$X2,method="pearson")$p.value
+cor.test(anscombe$X3,anscombe$X4,method="spearman")$p.value
+cor.test(anscombe$X5,anscombe$X6,method="spearman")$p.value
+cor.test(anscombe$X7,anscombe$X8,method="spearman")$p.value
+```
+
+Debido al Warning obtenido (Cannot compute exact p-value with ties[1] 0.1173068), se calcula el coeficiente de correlación con el método de Spearman, aun así que el test de Henze-Zirkler dice como resultado NO.
+
+```{r}
+cor.test(anscombe$X7,anscombe$X8,method="pearson")$p.value
+```
+
+## (e) Observar, comentar y concluir.
+
+Por los resultados obtenidos en el primer par de variables se utiliza el coeficiente de correlación de Pearson y para los tres paredes restantes el de Spearman. Aunque para la relación de variables X7 y X8 aunque se obtuvo con test de Henze-Zirkler como resultado NO, se recibe una warning por el cual se hace la prueba con el test de Pearson.
+
+### 1.2. Modelo Lineal Simple
+
+## Ejercicio 1.3. El archivo peso_edad_colest.xlsx disponible contiene registros correspondientes a 25 individuos respecto de su peso, su edad y el nivel de colesterol total en sangre.
+
+Se pide:
+
+## (a) Realizar el diagrama de dispersión de colesterol en función de la edad y de colesterol en función de peso. Le parece adecuado ajustar un modelo lineal para alguno de estos dos pares de variables?
+
+```{r}
+#Se cargan los datos
+colesterol <- read_excel('peso_edad_colest.xlsx')
+
+#Se visualizan la estructura
+head(colesterol)
+```
+
+Se realizan los diagramas de dispersión solicitados
+```{r}
+#Diagrama de dispersión colesterol en función de la edad
+dd112=ggplot(colesterol, aes(edad, colest)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n edad vs colesterol")
+dd112
+```
+
+
+```{r}
+#Diagrama de dispersión colesterol en función del peso
+dd212=ggplot(colesterol, aes(peso, colest)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de Dispersi\u00F3n peso vs colesterol")
+dd212
+```
+
+
+Por las gráficas se podría pensar que se ajuste un modelo lineal entre las variables edad y colesterol.
+
+## (b) Estime los coeficientes del modelo lineal para el colesterol en función de la edad.
+
+Coeficientes
+```{r}
+#Modelo lineal para el colesterol en función de la edad.
+model <- lm(colest ~ edad, data = colesterol)
+model$coefficients
+```
+Grafica del modelo y las bandas de error estándar alrededor de la línea de regresión
+```{r}
+(dd112+ geom_smooth(method = "lm", se = TRUE, color = "black") )
+```
+
+
+
+## (c) Estime intervalos de confianza del 95% para los coeficientes del modelo y compare estos resultados con el test de Wald para los coeficientes. Le parece que hay asociación entre estos test y el test de la regresión?
+
+
+
+## (d) A partir de esta recta estime los valores de E(Y ) para x = 25 años y x = 48 años. Podría estimarse el valor de E(Y ) para x = 80 años?
+
+
+## (e) Testee la normalidad de los residuos y haga un gráfico para ver si son homocedásticos.
+
+
+
+
+
