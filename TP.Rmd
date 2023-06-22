@@ -40,7 +40,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -51,6 +51,10 @@ library(ggplot2)
 library(MVN)
 library(gridExtra)
 library(aod)
+library(MASS)
+library(carData)
+library(car)
+
 ```
 
 
@@ -165,7 +169,10 @@ corTest
 El resultado del test de correlación de Pearson como se mostró en el punto b corresponde a una correlacion positiva baja entre las variables y un P-valor de `r corTest$p.value` que seria mayor que el nivel de significancia $\alpha$ = 0,05 de la prueba, por tal razon, no se puede afirmar la presencia de una asociación significativa entre las variables.
 
 
-### Ejercicio 1.2.Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
+
+### Ejercicio 1.2.
+Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
+
 
 Se pide explorar los datos de la siguiente manera:
 
@@ -439,11 +446,146 @@ disponibles en el archivo energia.xlsx</span>
 ## (a) 
 Realizar el diagrama de dispersión y evaluar si un modelo de regresión lineal es adecuado.
 
+```{r}
+# Se cargan los datos
+energia <- read_excel('energia.xlsx')
+
+#Se visualizan la estructura
+head(energia)
+```
+```{r}
+#Dimensiones
+dim(energia)
+```
+
+
+Diagrama de dispersión
+```{r}
+#Diagrama de dispersión colesterol en función del peso
+dd14=ggplot(energia, aes(Hora, Energía)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de dispersi\u00F3n Hora vs Energía")
+dd14
+```
+
+```{r}
+# Validación de una distribución normal bivariada para estas variables
+biNormTest14 <- mvn(energia, mvnTest = "hz")
+biNormTest14 
+```
+Por arrojar un resultado de MVN NO se realiza el test de Spearman
+```{r}
+cor.test(energia$Hora,energia$Energía,method="spearman")$p.value
+```
+
+```{r}
+# métodos robustos para manejar empates
+cor.test(energia$Hora, energia$Energía, method = "spearman", exact = FALSE)
+```
+
+La salida corresponde a la prueba de correlación de rangos de Spearman y se puede interpretar de la siguiente manera:
+
+- La primera línea indica que se realizó la prueba de correlación de rangos de Spearman en los datos de las variables "Hora" y "Energía" del dataframe "energia".
+
+- El valor de S es 19093, que es la suma de los cuadrados de las diferencias entre los rangos de las dos variables.
+
+- El valor p es 0.8064, que es el valor p obtenido de la prueba de hipótesis. En este caso, como el valor p es mayor que 0.05 (nivel de significancia comúnmente utilizado), no hay suficiente evidencia para rechazar la hipótesis nula de que no hay correlación entre las dos variables.
+
+- La hipótesis alternativa indica que el verdadero coeficiente de correlación rho no es igual a cero.
+
+- La estimación de rho basada en la muestra es -0.03631528, lo que indica una correlación negativa muy débil entre las dos variables.
+
+En resumen, la salida sugiere que no hay evidencia suficiente para concluir que hay una correlación significativa entre las variables "Hora" y "Energía" en el conjunto de datos analizado.
+
 ## (b) 
 Estimar un modelo lineal y verificar la normalidad de los residuos del mismo.
 
+```{r}
+model14 = lm(Hora ~ Energía, data=energia)
+summary(model14)
+```
+El modelo de regresión lineal ajustado es el siguiente:
+
+Hora = 18.55802 + 0.01178 * Energía
+
+Se interpreta:
+
+- Residuals: Muestra los valores mínimos, primer cuartil, mediana, tercer cuartil y máximo de los residuos del modelo. Los residuos representan la diferencia entre los valores observados de la variable "Hora" y los valores predichos por el modelo.
+
+- Coefficients: Muestra los coeficientes estimados del modelo. El intercepto (Intercept) tiene un valor estimado de 18.55802 y un error estándar de 11.33302. La variable explicativa "Energía" tiene un coeficiente estimado de 0.01178 y un error estándar de 0.02211.
+
+- Residual standard error: Indica la desviación estándar de los residuos, que es una medida de la variabilidad no explicada por el modelo. En este caso, el valor es de 14.11.
+
+- El R-cuadrado múltiple indica la proporción de la variabilidad total de la variable "Hora" explicada por el modelo, y en este caso es de 0.006138. El R-cuadrado ajustado tiene en cuenta el número de variables explicativas y los grados de libertad, y en este caso es de -0.01547. Ambos valores son bajos, lo que sugiere que el modelo tiene una capacidad limitada para explicar la variabilidad en la variable respuesta.
+
+- F-statistic y p-value: El F-statistic evalúa si el modelo en su conjunto es significativo. En este caso, el valor del estadístico F es de 0.2841 con 1 y 46 grados de libertad. El p-value asociado al F-statistic es de 0.5966, lo que indica que no hay suficiente evidencia para rechazar la hipótesis nula de que los coeficientes del modelo sean igual a cero.
+
+El modelo de regresión lineal ajustado no parece ser estadísticamente significativo, ya que el p-value asociado al F-statistic es alto y los coeficientes de las variables no son significativamente diferentes de cero. Además, el R-cuadrado es muy bajo, lo que sugiere que el modelo no explica de manera efectiva la variabilidad en la variable "Hora" basándose únicamente en la variable "Energía".
+
 ## (c) 
 En caso de rechazar este supuesto buscar una transformación lineal para este modelo y aplicarla.
+
+```{r}
+library(MASS)
+
+# Aplica la transformación de Box-Cox a la variable dependiente "Energía" en función de la variable independiente "Hora"
+box_cox_result <- boxcox(Energía ~ Hora, lambda = -5:2, data = energia)
+
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
+
+# Se ajusta un modelo de regresión lineal utilizando la variable dependiente "Energía" elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente "Hora".
+modelE2 <- lm((Energía)^(best_box_cox) ~ Hora, data = energia)
+
+summary(modelE2)
+shapiro.test(modelE2$residuals)
+```
+Según el gráfico, el lambda óptimo se encuentra cerca de -1. Entonces consideraremos la transformación logarítmica sobre la variable respuesta.
+
+
+```{r}
+energia3<-energia
+energia3$Energía <- log(energia$Energía)
+energia3$prediccion <- modelE2$fitted.values 
+energia3$residuos <- modelE2$residuals
+ggplot(data = energia3, aes(x = residuos)) + geom_histogram(aes(y = ..density..)) + 
+  labs(title = "Histograma de los residuos") + theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+qqnorm(modelE2$residuals) 
+qqline(modelE2$residuals)
+```
+
+
+
+
+```{r}
+linMod2 <- lm(log10(Energía) ~ Hora, data = energia)
+summary(linMod2)
+
+```
+
+```{r}
+plot(energia$Hora,log10(energia$Energía),xlab="Hora",ylab="log10(Energía)",
+     main="Hora vs log10(Energía)")
+
+abline(linMod2,col="darkviolet",lwd=2)
+```
+análisis diagnóstico
+
+```{r}
+shapiro.test(linMod2$residuals)
+```
+
+```{r}
+library(car)
+
+# Prueba de heterocedasticidad 
+ncvTest(modelE2)
+
+```
+```{r}
+dwt(linMod2)
+```
+
 
 ## (d)
 
