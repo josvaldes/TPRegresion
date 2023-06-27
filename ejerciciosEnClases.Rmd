@@ -1,0 +1,65 @@
+---
+title: "ejerciciosEnClases"
+author: "Jose Valdes"
+date: "2023-06-27"
+output:
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+  pdf_document:
+    toc: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE ) 
+```
+
+
+# <span style="color:darkred"> 1. Asociación entre variables </span>
+
+## Ejemplo 1: Publicidad-Ventas
+
+<span class="justify"> Interesa estudiar la existencia de correlación lineal entre la inversión en
+publicidad (X) y los ingresos de la empresa (W) con este objetivo se recogieron los datos correspondientes a ambas variables en un grupo de empresas nacionales con locales en shoppings.</span>
+
+```{r}
+library(MVN)
+# incorporamos los datos
+X=c(60, 61, 61, 62, 63, 64, 65, 68, 70)
+W=c( 125, 130, 120, 135, 130, 140, 140, 160, 169)
+data=data.frame(X,W)
+# guardamos los resultados del Test Henze-Zirkler en el objeto result
+result <- mvn(data , mvnTest = "hz")
+# mostramos los resultados
+result$multivariateNormality
+```
+<span class="justify">Puede sostenerse el supuesto distribucional normal bivariado para estas
+variables.</span>
+
+```{r}
+cor(X,W)
+```
+```{r}
+cor.test(X,W)
+```
+<span class="justify">Existe correlación entre las variables, debido a que el test no genera evidencias suficientes para no rechazar Ho.</span>
+
+## Ejemplo 2: Relación no Lineal
+
+
+
+
+# <span style="color:darkred">2. Regresión Lineal Simple</span>
+
+# <span style="color:darkred">3. Estimación e Interpretación del modelo</span>
