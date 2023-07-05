@@ -1,8 +1,13 @@
 ---
 title: "Trabajo Practico Regresión Avanzada"
+subtitle: "Regresión Lineal Simple"
 author: "Jose Valdes"
 date: "2023-06-05"
 output:
+ 
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
   html_document:
     toc: yes
     code_folding: show
@@ -10,8 +15,9 @@ output:
     df_print: paged
     theme: united
     code_download: yes
-  pdf_document:
+  word_document:
     toc: yes
+    toc_depth: '5'
 ---
 
 ```{r setup, include=FALSE}
@@ -65,10 +71,10 @@ library(car)
 
 <br>
 
-### Ejercicio 1.1. 
+## Ejercicio 1.1. 
 En el archivo grasacerdos.xlsx se encuentran los datos del peso vivo (PV, en Kg) y al espesor de grasa dorsal (EGD, en mm) de 30 lechones elegidos al azar de una población de porcinos Duroc Jersey del Oeste de la provincia de Buenos Aires. Se pide
 
-## (a) 
+### (a) 
 Dibujar el diagrama de dispersión e interpretarlo.
 
 ```{r}
@@ -99,7 +105,7 @@ ggplot(grasacerdos, aes(PV, EGD)) +
 
 No se observa corelación entre las variables
 
-## (b) 
+### (b) 
 Calcular el coeficiente de correlación muestral y explíquelo.
 
 ```{r}
@@ -116,7 +122,7 @@ corCoeff
 ```
 La prueba de correlación de Pearson muestra que existe una correlación positiva débil entre las variables. Esto significa que hay una tendencia a que los valores de las variables aumenten juntos, pero la relación no es muy fuerte.
 
-## (c) 
+### (c) 
 ¿Hay suficiente evidencia para admitir asociación entre el peso y el espesor de grasa? (α = 0,05). Verifique los supuestos para decidir el indicador que va a utilizar.
 
 Para determinar si hay suficiente evidencia para admitir una asociación entre el peso y el espesor de grasa, es necesario verificar los supuestos y luego utilizar un indicador apropiado para evaluar la correlación entre las variables.
@@ -170,13 +176,13 @@ El resultado del test de correlación de Pearson como se mostró en el punto b c
 
 
 
-### Ejercicio 1.2.
+## Ejercicio 1.2.
 Los datos del cuarteto de Anscombe se encuentran en el archivo anscombe.xlsx
 
 
 Se pide explorar los datos de la siguiente manera:
 
-## (a) 
+### (a) 
 Graficar los cuatro pares de datos en un diagrama de dispersión cada uno.
 
 ```{r}
@@ -219,21 +225,21 @@ grid.arrange(dd1,dd2,dd3,dd4, ncol = 2, nrow = 2)
 ```
 
 
-## (b) 
+### (b) 
 Hallar los valores medios de las variables para cada par de datos.
 
 ```{r}
 colMeans(anscombe)
 ```
 
-## (c) 
+### (c) 
 Hallar los valores de la dispersión para cada conjunto de datos.
 
 ```{r}
 sapply(anscombe, sd)
 ```
 
-## (d) 
+### (d) 
 Hallar el coeficiente muestral de correlación lineal en cada caso.
 
 ```{r}
@@ -253,7 +259,7 @@ Debido al Warning obtenido (Cannot compute exact p-value with ties[1] 0.1173068)
 cor.test(anscombe$X7,anscombe$X8,method="pearson")$p.value
 ```
 
-## (e) 
+### (e) 
 Observar, comentar y concluir.
 
 Por los resultados obtenidos en el primer par de variables se utiliza el coeficiente de correlación de Pearson y para los tres paredes restantes el de Spearman. Aunque para la relación de variables X7 y X8 aunque se obtuvo con test de Henze-Zirkler como resultado NO, se recibe una warning por el cual se hace la prueba con el test de Pearson.
@@ -266,7 +272,7 @@ El archivo peso_edad_colest.xlsx disponible contiene registros correspondientes 
 
 Se pide:
 
-## (a) 
+### (a) 
 Realizar el diagrama de dispersión de colesterol en función de la edad y de colesterol en función de peso. Le parece adecuado ajustar un modelo lineal para alguno de estos dos pares de variables?
 
 ```{r}
@@ -296,7 +302,7 @@ dd212
 
 Por las gráficas se podría pensar que se ajuste un modelo lineal entre las variables edad y colesterol.
 
-## (b) 
+### (b) 
 Estime los coeficientes del modelo lineal para el colesterol en función de la edad.
 
 Coeficientes
@@ -312,7 +318,7 @@ Grafica del modelo y las bandas de error estándar alrededor de la línea de reg
 
 
 
-## (c) 
+### (c) 
 Estime intervalos de confianza del 95% para los coeficientes del modelo y compare estos resultados con el test de Wald para los coeficientes. Le parece que hay asociación entre estos test y el test de la regresión?
 
 ```{r}
@@ -365,7 +371,7 @@ En resumen, hay evidencia de asociación entre el coeficiente de intercepto y la
 
 
 
-## (d) 
+### (d) 
 A partir de esta recta estime los valores de E(Y ) para x = 25 años y x = 48 años. Podría estimarse el valor de E(Y ) para x = 80 años?
 
 Para estimar los valores de E(Y) para diferentes valores de x utilizando la recta ajustada en el modelo de regresión, se pueden utilizar los coeficientes del modelo.
@@ -384,7 +390,7 @@ predict(model, newdata = data.frame(edad = c(25,80)))
 <span class="justify">Sin embargo, para valores de x más allá del rango de los datos observados, como x = 80 años, la extrapolación puede no ser confiable. La recta ajustada se basa en los datos observados y su validez puede estar limitada a ese rango. Por lo tanto, no se recomienda estimar el valor de E(Y) para x = 80 años utilizando este modelo de regresión.</span>
 
 
-## (e) 
+### (e) 
 Testee la normalidad de los residuos y haga un gráfico para ver si son homocedásticos.
 
 ```{r}
@@ -445,7 +451,7 @@ productivo. Existe el interés de controlar la estabilidad del sistema, para ell
 se monitorea el mismo y se registran los datos cada hora. Los datos se encuentran
 disponibles en el archivo energia.xlsx</span>
 
-## (a) 
+### (a) 
 Realizar el diagrama de dispersión y evaluar si un modelo de regresión lineal es adecuado.
 
 ```{r}
@@ -498,7 +504,7 @@ La salida corresponde a la prueba de correlación de rangos de Spearman y se pue
 
 En resumen, la salida sugiere que no hay evidencia suficiente para concluir que hay una correlación significativa entre las variables "Hora" y "Energía" en el conjunto de datos analizado.
 
-## (b) 
+### (b) 
 Estimar un modelo lineal y verificar la normalidad de los residuos del mismo.
 
 ```{r}
@@ -518,7 +524,7 @@ El modelo en general muestra un ajuste deficiente, ya que el valor del R-cuadrad
 En resumen, el modelo de regresión lineal no muestra una relación significativa entre la variable "Hora" y la variable "Energía", y no es capaz de explicar la variabilidad en los datos de manera satisfactoria.
 
 
-## (c) 
+### (c) 
 En caso de rechazar este supuesto buscar una transformación lineal para este modelo y aplicarla.
 
 ```{r}
@@ -605,7 +611,7 @@ abline(linMod2,col="darkviolet",lwd=2)
 ```
 
 
-## (d)
+### (d)
 
 Realizar el análisis diagnóstico del nuevo modelo y estimar un intervalo de confianza y un intervalo de predicción para 27.5 hs con ambos modelos. Comparar los intervalos.
 
@@ -694,46 +700,245 @@ Si se toma el último modelo que cumplió los supuestos y se retira la transform
 10^ic3
 10^ip3
 ```
+
 # <span style="color:darkred">1.4. Tratamiento de la heterocedasticidad</span>
 
 
-# Ejercicio 1.5. 
-Se obtuvieron datos históricos del mercado inmobiliario de una
-ciudad de Nueva Taipei, en Taiwan. La base es inmobiliaria.xlsx .
+## Ejercicio 1.5. 
+
+Se obtuvieron datos históricos del mercado inmobiliario de una ciudad de Nueva Taipei, en Taiwan. La base es inmobiliaria.xlsx .
+
 Las características son:
-edad: Edad de la propiedad (en años).
-distancia: La distancia a la estación de transporte más cercana (en metros).
-negocios: Cantidad de negocios de conveniencia en las cercanías a
-una distancia realizable a pie.
-latitud: Latitud de la ubicación de la propiedad (en grados).
-longitud: Longitud de la ubicación de la propiedad (en grados).
-precio: Precio por metro cuadrado (en miles de dólares)
-Se quiere investigar si el precio de las propiedades puede ser estimado en
-función de alguna de las variables disponibles.
-(a) Analizar si el precio depende de alguna de las variables.
-(b)Estudiar la linealidad de la relación precio-distancia.
-(c) Estimar los coeficientes del modelo y realizar el análisis diagnóstico de
+
+- edad: Edad de la propiedad (en años).
+- distancia: La distancia a la estación de transporte más cercana (en metros).
+- negocios: Cantidad de negocios de conveniencia en las cercanías a una distancia realizable a pie.
+- latitud: Latitud de la ubicación de la propiedad (en grados).
+- longitud: Longitud de la ubicación de la propiedad (en grados).
+- precio: Precio por metro cuadrado (en miles de dólares)
+
+Se quiere investigar si el precio de las propiedades puede ser estimado en función de alguna de las variables disponibles.
+
+```{r}
+# se carga la base
+baseeje15="C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/inmobiliaria.csv"
+propiedades <- read.csv(baseeje15,header = TRUE, sep = ";")
+
+propiedades
+```
+
+
+### (a)
+Analizar si el precio depende de alguna de las variables.
+
+```{r}
+# Se crea el promedio de las variables
+promediosP <- colMeans(propiedades)
+
+# Se crea las graficas 
+# grafica edad vs precio
+c1 <- ggplot(propiedades, aes(edad, precio)) + 
+  geom_point() +
+  geom_vline(xintercept=promediosP[1],linetype="dotted") + 
+  geom_hline(yintercept=promediosP[6],linetype="dotted") +
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+
+# grafica distancia vs precio
+c2 <- ggplot(propiedades, aes(distancia, precio)) + 
+  geom_point() + 
+  geom_vline(xintercept=promediosP[2],linetype="dotted") +
+  geom_hline(yintercept=promediosP[6],linetype="dotted") + 
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+
+# grafica negocios vs precio
+c3 <- ggplot(propiedades, aes(negocios, precio)) + 
+  geom_point() +
+  geom_vline(xintercept=promediosP[3],linetype="dotted") + 
+  geom_hline(yintercept=promediosP[6],linetype="dotted") + 
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+
+# grafica negocios vs precio
+
+c4 <- ggplot(propiedades, aes(latitud, precio)) + 
+  geom_point() +
+  geom_vline(xintercept=promediosP[4],linetype="dotted") + 
+  geom_hline(yintercept=promediosP[6],linetype="dotted") + 
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+
+# grafica longitud vs precio
+
+c5 <- ggplot(propiedades, aes(longitud, precio)) + 
+  geom_point() +
+  geom_vline(xintercept=promediosP[5],linetype="dotted") + 
+  geom_hline(yintercept=promediosP[6],linetype="dotted") + 
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+
+grid.arrange(c1,c2,c3,c4,c5, ncol = 3, nrow = 2)
+```
+
+Se realizan los tests:
+```{r}
+# test Precio y edad
+biNormTest <- mvn(data = propiedades[c(6,1)], mvnTest = "hz")
+print(biNormTest$multivariateNormality$MVN)
+
+# test Precio y distancia
+biNormTest <- mvn(data = propiedades[c(6,2)], mvnTest = "hz")
+print(biNormTest$multivariateNormality$MVN)
+
+# test Precio y negocio
+biNormTest <- mvn(data = propiedades[c(6,3)], mvnTest = "hz")
+print(biNormTest$multivariateNormality$MVN)
+
+# test Precio y latitud
+biNormTest <- mvn(data = propiedades[c(6,4)], mvnTest = "hz")
+print(biNormTest$multivariateNormality$MVN)
+
+# test Precio y longitud
+biNormTest <- mvn(data = propiedades[c(6,5)], mvnTest = "hz")
+print(biNormTest$multivariateNormality$MVN)
+```
+<p style="text-align: justify;">Por el resultado se observa que al no ser una distribución normal bivariada se procede a utilizar la correlación de Spearman</p>
+
+```{r}
+cor.test(propiedades$precio,propiedades$edad,method="spearman")$p.value
+cor.test(propiedades$precio,propiedades$distancia,method="spearman")$p.value
+cor.test(propiedades$precio,propiedades$negocios,method="spearman")$p.value
+cor.test(propiedades$precio,propiedades$latitud,method="spearman")$p.value
+cor.test(propiedades$precio,propiedades$longitud,method="spearman")$p.value
+```
+Las advertencias muestran empates en los datos para el calculo del P-valor, en tal sentido se utiliza un metodo robusto:
+```{r}
+# métodos robustos para manejar empates
+cor.test(propiedades$precio,propiedades$edad,method="spearman",exact = FALSE)$p.value
+cor.test(propiedades$precio,propiedades$distancia,method="spearman",exact = FALSE)$p.value
+cor.test(propiedades$precio,propiedades$negocios,method="spearman",exact = FALSE)$p.value
+cor.test(propiedades$precio,propiedades$latitud,method="spearman",exact = FALSE)$p.value
+cor.test(propiedades$precio,propiedades$longitud,method="spearman",exact = FALSE)$p.value
+
+```
+<p style="text-align: justify;">Por los resultados de los p-valores de las variables evaluadas contra la variable precio se rechaza la hipótesis nula y se concluye que existe correlación entre las variables.</p>
+
+<p style="text-align: justify;">Finalmente se presente un corplot para confirmar la relaciones entre las variables.</p>
+
+```{r}
+library(corrplot)
+corrplot(cor(propiedades,method="s"))
+```
+
+
+
+### (b)
+Estudiar la linealidad de la relación precio-distancia.
+
+```{r}
+modelProp <- lm(precio ~ distancia, data = propiedades)
+
+shapiro.test(modelProp$residuals)
+```
+No son normales los residuos.
+
+
+### (c)
+<p style="text-align: justify;"> Estimar los coeficientes del modelo y realizar el análisis diagnóstico de
 los residuos del mismo. Utilizar para este análisis los gráficos de residuos
 versus valores ajustados, el qq-plot de los residuos, la grafica de residuos
-versus leverage.
-(d) Aplicar los test de Durbin-Watson Breush-Pagan.
-(e) Analice la presencia de outlier y verifique si coinciden con los puntos
-influyentes.
+versus leverage.</p>
+
+```{r}
+prop2<-propiedades
+prop2$prediccion <- modelProp$fitted.values 
+prop2$residuos <- modelProp$residuals
+
+d1 <- ggplot(data = prop2, aes(x = prediccion, y = residuos)) + 
+  geom_point(aes(color = residuos)) + 
+  scale_color_gradient2(low = "blue3", mid = "grey", high = "red") + 
+  geom_hline(yintercept = 0) + geom_segment(aes(xend = prediccion, yend = 0), alpha = 0.2) + 
+  labs(title = "Distribución de los residuos", x = "predicción modelo", y = "residuo") + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+
+
+d2<- ggplot(data = prop2, aes(x = residuos)) + geom_histogram(aes(y = ..density..)) + 
+  labs(title = "Histograma de los residuos") + theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+qqnorm(modelProp$residuals) 
+qqline(modelProp$residuals)
+grid.arrange(d1,d2,nrow = 1)
+
+```
+
+En la gráfica de los residuos no se observa estructura.
+
+```{r}
+par(mfrow=c(2,2))
+plot(modelProp)
+par(mfrow=c(1,1))
+```
+
+
+
+### (d)
+Aplicar los test de Durbin-Watson Breush-Pagan.
+
+```{r}
+#Durbin-Watson
+library(lmtest)
+dwtest(modelProp,alternative ="two.sided",iterations=1000)
+```
+<p style="text-align: justify;">No hay evidencia suficiente para afirmar que hay autocorrelación en los residuos del modelo, ya que el valor p es mayor que el nivel de significancia comúnmente utilizado.</p>
+
+```{r}
+# Test de Breush-Pagan
+library(lmtest)
+bptest(modelProp)
+```
+
+No se rechaza homocedasticidad.
+
+
+### (e)
+<p style="text-align: justify;">Analice la presencia de outlier y verifique si coinciden con los puntos
+influyentes.</p>
+
+```{r}
+summary(influence.measures(model = modelProp))
+```
+
 
 
 # <span style="color:darkred">1.5. Cuadrados Mínimos Ponderados</span>
 
-# Ejercicio 1.6. 
-En la base estudio.xlsx se encuentran registradas las horas de
+## Ejercicio 1.6. 
+<p style="text-align: justify;">En la base estudio.xlsx se encuentran registradas las horas de
 estudios referidas por un conjunto de estudiantes y su calificación en la evaluación
-final.
-(a) Ajuste un modelo de regresión simple para estimar la nota final en función
+final.</p>
+
+### (a)
+Ajuste un modelo de regresión simple para estimar la nota final en función
 de las horas dedicadas al estudio.
-(b) Estudie el cumplimiento de los supuestos del modelo, gráfica y analíticamente.
-(c) Ajuste un modelo de mínimos cuadrados ponderados definiendo los pesos
+
+### (b)
+Estudie el cumplimiento de los supuestos del modelo, gráfica y analíticamente.
+
+
+### (c)
+<p style="text-align: justify;">Ajuste un modelo de mínimos cuadrados ponderados definiendo los pesos
 de tal manera que las observaciones con menor varianza tengan más
-peso.
-(d) Realice el análisis diagnóstico del segundo modelo ajustado.
-(e) Compare ambos ajustes realizados y concluya.
+peso.</p>
+
+
+### (d)
+Realice el análisis diagnóstico del segundo modelo ajustado.
+
+
+### (e)
+Compare ambos ajustes realizados y concluya.
 
 
