@@ -4,7 +4,9 @@ subtitle: "Regresión Lineal Simple"
 author: "Jose Valdes"
 date: "2023-06-05"
 output:
- 
+  word_document:
+    toc: yes
+    toc_depth: '5'
   pdf_document:
     toc: yes
     toc_depth: '5'
@@ -15,9 +17,6 @@ output:
     df_print: paged
     theme: united
     code_download: yes
-  word_document:
-    toc: yes
-    toc_depth: '5'
 ---
 
 ```{r setup, include=FALSE}
@@ -911,6 +910,81 @@ influyentes.</p>
 summary(influence.measures(model = modelProp))
 ```
 
+
+
+```{r}
+dfbetas(modelProp)[,2]> 1
+```
+
+```{r}
+which(dfbetas(modelProp)[,2]>1)
+```
+
+```{r}
+n<-length(propiedades$precio)
+p<-length(modelProp$coefficients)
+which(dffits(modelProp)>2 * sqrt(p / n))
+```
+Otros puntos influyentes: puntos de alto leverage y distancia de Cook
+
+```{r}
+influencePlot(model = modelProp)
+```
+
+```{r}
+influenceIndexPlot(modelProp, vars='Bonf', las=1,col='green')
+```
+
+
+```{r}
+outlierTest(modelProp)
+```
+
+```{r}
+#leverage
+hatvalues(modelProp)
+```
+
+
+```{r}
+hist(hatvalues(modelProp))
+```
+
+```{r}
+lev<-hatvalues(modelProp)
+
+#un criterio (mayores que 0.2) 
+
+which(lev>0.2)
+```
+
+```{r}
+#un criterio mas exigente
+n<-length(propiedades$precio)
+p<-length(modelProp$coefficients)
+which(lev>2*p/n)
+```
+
+```{r}
+#distancias de cook
+dcook<-cooks.distance(modelProp)
+influenceIndexPlot(modelProp, vars='Cook', las=1,col='blue')
+```
+
+```{r}
+which(dcook>4/n)
+```
+
+```{r}
+hist(dcook)
+```
+
+```{r}
+#punto de corte
+corted<-qf(0.5,2,n-2)
+which(dcook>corted)
+```
+Se observa que el punto outlier que a su vez es punto influyente es el 266 y los puntos influyentes del conjunto de datos son 109, 112, 245 y 343.
 
 
 # <span style="color:darkred">1.5. Cuadrados Mínimos Ponderados</span>
