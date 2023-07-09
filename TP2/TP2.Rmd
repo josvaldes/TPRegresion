@@ -31,15 +31,40 @@ knitr::opts_chunk$set(
 ```
 
 
-
-
-
-```{r librerias}
-packages <- c('dplyr','GGally','ggplot2','MVN')
-
-packLoad <- lapply(packages, require, character.only = TRUE) 
-library(dplyr,ggplot2,GGally,MVN)
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
 ```
+Se realiza validación de la instalación de los paquetes necesarios para ejecutar el script
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("dplyr","GGally","MVN","ggplot2")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+library(dplyr)
+library(GGally)
+library(MVN)
+library(ggplot2)
+
+
+```
+
 
 
 # <span style="color:darkred">2.1. Modelo Aditivo</span>
