@@ -1,0 +1,179 @@
+---
+title: "Trabajo Practico Regresión Avanzada"
+subtitle: "Modelo Lineal Multivariado"
+author: "Jose Valdes"
+date: "2023-07-08"
+output:
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  word_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE)
+```
+
+
+
+
+
+```{r librerias}
+packages <- c('dplyr','GGally','ggplot2','MVN')
+
+packLoad <- lapply(packages, require, character.only = TRUE) 
+library(dplyr,ggplot2,GGally,MVN)
+```
+
+
+# <span style="color:darkred">2.1. Modelo Aditivo</span>
+
+
+## Ejercicio 2.1.
+<p style="text-align: justify;">Con el set de datos trees, disponible en la biblioteca dplyr de R,
+pretendemos ajustar un modelo que estimo el volumen (en pies cúbicos) de los
+árboles de cerezo en función de la longitud de su circunferencia (en pulgadas)
+y de su altura (en pies).</p>
+
+
+### a) 
+Visualizar la asociación entre las variables de a pares.
+
+```{r}
+trees
+```
+
+
+```{r}
+pairs(trees, panel = panel.smooth, main = "trees data")
+```
+
+Se observa una relación positiva de las variables.
+
+```{r}
+rbind(mvn(data = trees[c(1,2)], mvnTest = "hz")$multivariateNormality,
+      mvn(data = trees[c(1,3)], mvnTest = "hz")$multivariateNormality,
+      mvn(data = trees[c(2,3)], mvnTest = "hz")$multivariateNormality)
+```
+
+```{r}
+cor.test(trees$Girth,trees$Height,method="pearson")$estimate
+cor.test(trees$Girth,trees$Volume,method="spearman")$estimate
+cor.test(trees$Height,trees$Volume,method="spearman")$estimate
+```
+
+
+
+```{r}
+library(ggplot2)
+library(GGally)
+ggpairs(trees,    upper = list(continuous = wrap("cor",method="spearman")),
+    lower =list(continuous = wrap("cor",method="pearson")))
+```
+
+
+### b)
+Ajuste un modelo lineal simple para cada una de las dos predictoras disponibles.
+
+**Volume ~ Girth
+```{r}
+model21_vg <- lm(Volume ~ Girth, data = trees)
+promedios21 <- colMeans(trees)
+ggplot(trees, aes(Volume, Girth)) + 
+  geom_point() +
+  geom_vline(xintercept=promedios21[3],linetype="dotted") + 
+  geom_hline(yintercept=promedios21[1],linetype="dotted") +
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+```
+
+
+**Volume ~ Height
+```{r}
+model21_vh <- lm(Volume ~ Height, data = trees)
+promedios21 <- colMeans(trees)
+ggplot(trees, aes(Volume, Height)) + 
+  geom_point() +
+  geom_vline(xintercept=promedios21[3],linetype="dotted") + 
+  geom_hline(yintercept=promedios21[2],linetype="dotted") +
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+```
+
+
+
+### c)
+Realice un análisis diagnóstico en cada caso y señale en caso de haberlos
+puntos influyentes y outliers.
+
+### d)
+Estime un intervalo de confianza para los coeficientes del modelo lineal
+estimado en cada caso.
+
+
+### e)
+Ajuste un nuevo modelo sin la/s observaciones influyentes.
+
+
+### f)
+Construya el intervalo de confianza y el de predicción del 95% para un
+árbol cuyo diámetro es 16.1 pulgadas.
+
+
+### g)
+Ajuste un modelo utilizando conjuntamente las dos variables predictoras
+y compare este ajuste con el mejor de los modelos anteriores mediante un
+test de modelos anidados. Concluya.
+
+# <span style="color:darkred">2.2. Modelo con Interacción</span>
+
+
+
+
+## Ejercicio 2.2.
+
+
+# <span style="color:darkred">2.3. Regresoras Categóricas</span>
+
+
+## Ejercicio 2.3.
+
+
+
+# <span style="color:darkred">2.4. Regresión Polinómica</span>
+
+
+## Ejercicio 2.4.
+
+
+# <span style="color:darkred">2.5. Modelo Robusto</span>
+
+
+
+## Ejercicio 2.6.
+
+
+
+# <span style="color:darkred">2.6. Regresión Cuantiles</span>
+
+
+## Ejercicio 2.7.
+
+
+

@@ -4,12 +4,6 @@ subtitle: "Regresión Lineal Simple"
 author: "Jose Valdes"
 date: "2023-06-05"
 output:
-  word_document:
-    toc: yes
-    toc_depth: '5'
-  pdf_document:
-    toc: yes
-    toc_depth: '5'
   html_document:
     toc: yes
     code_folding: show
@@ -17,6 +11,12 @@ output:
     df_print: paged
     theme: united
     code_download: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  word_document:
+    toc: yes
+    toc_depth: '5'
 ---
 
 ```{r setup, include=FALSE}
@@ -994,12 +994,127 @@ Se observa que el punto outlier que a su vez es punto influyente es el 266 y los
 estudios referidas por un conjunto de estudiantes y su calificación en la evaluación
 final.</p>
 
+```{r}
+# se carga la base
+baseeje16="C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/estudio.csv"
+estudioseje16 <- read.csv(baseeje16,header = TRUE, sep = ";")
+
+estudioseje16
+```
+
+
 ### (a)
-Ajuste un modelo de regresión simple para estimar la nota final en función
-de las horas dedicadas al estudio.
+<p style="text-align: justify;">Ajuste un modelo de regresión simple para estimar la nota final en función
+de las horas dedicadas al estudio.</p>
+
+```{r}
+model16 <- lm(puntaje ~ horas_estudio, data = estudioseje16)
+promedios16 <- colMeans(estudioseje16)
+ggplot(estudioseje16, aes(horas_estudio, puntaje)) + 
+  geom_point() +
+  geom_vline(xintercept=promedios16[1],linetype="dotted") + 
+  geom_hline(yintercept=promedios16[2],linetype="dotted") +
+   geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+```
+
 
 ### (b)
-Estudie el cumplimiento de los supuestos del modelo, gráfica y analíticamente.
+<p style="text-align: justify;">Estudie el cumplimiento de los supuestos del modelo, gráfica y analíticamente.</p>
+
+Gráficamente:
+
+<p style="text-align: justify;">En el punto a) se observa que el modelo lineal y su intervalo de confianza presentan puntos que pueden ser outliers e influyentes, por lo tanto, no es un modelo muy confiable por algunas observaciones.</p>
+
+
+analíticamente:
+
+Se valida la binormalidad
+```{r}
+biNormTest16 <- mvn(data = estudioseje16, mvnTest = "hz")
+biNormTest16$multivariateNormality
+```
+
+Por la respuesta obtenida se aplica el test de Spearman
+```{r}
+corTest16 <- cor.test(estudioseje16$horas_estudio, estudioseje16$puntaje, method = "spearman",exact = FALSE) 
+corTest16
+```
+Por el resultado del p-valor de la variable evaluada contra la variable hora de estudio se rechaza la hipótesis nula y se concluye que existe correlación entre las variables.
+
+```{r}
+summary(model16)
+```
+Los resultados del modelo lineal indican que la variable horas_estudio es significativa y el modelo logra explicar el 50% de la variable respuesta, el modelo por el test F muestra que es significativo.
+
+**Normalidad de los residuos**
+```{r}
+shapiro.test(model16$residuals)
+```
+El test de normalidad de Shapiro indica que no hay normalidad de los residuos, dado que se rechaza la hipótesis nula de normalidad.
+
+```{r}
+qqnorm(model16$residuals) 
+qqline(model16$residuals)
+```
+Se observan puntos en los extremos que se alejan de la recta, esto puede deber ser a puntos outliers.
+
+```{r}
+model16b <- data.frame(prediccion = model16$fitted.values,
+                       residuos = model16$residuals)
+
+
+d1_16 <- ggplot(data = model16b, aes(x = prediccion, y = residuos)) + 
+  geom_point(aes(color = residuos)) + 
+  scale_color_gradient2(low = "blue3", mid = "grey", high = "red") + 
+  geom_hline(yintercept = 0) + geom_segment(aes(xend = prediccion, yend = 0), alpha = 0.2) + 
+  labs(title = "Distribución de los residuos", x = "predicción modelo", y = "residuo") + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+
+
+d2_16<- ggplot(data = model16b, aes(x = residuos)) + geom_histogram(aes(y = ..density..)) + 
+  labs(title = "Histograma de los residuos") + theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5))
+
+grid.arrange(d1_16,d2_16,nrow = 2)
+```
+Se podría pensar en alguna forma cónica de los residuos.
+
+**Validación de si los residuos estan aoutocorrelacionados**
+```{r}
+#Durbin-Watson
+dwtest(model16,alternative ="two.sided",iterations=1000)
+```
+No hay evidencia suficiente para afirmar que no hay autocorrelación en los residuos.
+
+**heterocedasticidad de los residuos**
+```{r}
+bptest(model16)
+```
+<p style="text-align: justify;">El valor p de 0.02877 indica que hay evidencia suficiente para rechazar la hipótesis nula de que no hay heteroscedasticidad en el modelo. En otras palabras, se sugiere que existe heteroscedasticidad en los residuos.</p>
+
+
+**Outliers**
+
+```{r}
+par(mfrow=c(2,2))
+plot(model16)
+par(mfrow=c(1,1))
+```
+```{r}
+summary(influence.measures(model = model16))
+```
+Se observa que el punto 36 puede ser outlier y/o influyente.
+
+```{r}
+outlierTest(model16)
+```
+```{r}
+influencePlot(model = model16)
+influenceIndexPlot(model16, vars='Bonf', las=1,col='green')
+```
+Se concluye que el punto 36 es un outlier.
 
 
 ### (c)
@@ -1007,12 +1122,78 @@ Estudie el cumplimiento de los supuestos del modelo, gráfica y analíticamente.
 de tal manera que las observaciones con menor varianza tengan más
 peso.</p>
 
+Se crea un vector de pesos:
+```{r}
+ww<-1 / lm(abs(model16$residuals) ~ model16$fitted.values)$fitted.values^2
+
+plot(estudioseje16$horas_estudio,estudioseje16$puntaje,xlab="Horas de estudio",ylab="Puntaje",
+     main="Horas vs Puntaje")
+
+abline(model16,col="darkviolet",lwd=2)
+
+model16_ww<- lm(puntaje ~ horas_estudio, data = estudioseje16,weights =ww)
+abline(model16_ww,col="hotpink",lwd=2)
+```
+
+Se observa un cambio de la pendiente de la recta de regresión, esto basado en los pesos asignados.
+
 
 ### (d)
-Realice el análisis diagnóstico del segundo modelo ajustado.
+<p style="text-align: justify;">Realice el análisis diagnóstico del segundo modelo ajustado.</p>
 
+**Normalidad de los residuos**
+```{r}
+shapiro.test(model16_ww$residuals)
+```
+No están normalmente distribuidos los residuos.
+
+
+**Independencia de los residuos**
+
+```{r}
+#dwtest(model16_ww,alternative ="two.sided",iterations=1000)
+
+#salida
+#Error in dwtest(model16_ww, alternative = "two.sided", iterations = 1000) :
+#weighted regressions are not supported
+```
+
+Por el error se intenta validar la independencia con otro test.
+
+```{r}
+
+# Realizar el test de Ljung-Box
+ljung_box_test <- Box.test(model16_ww$residuals, lag = 12, type = "Ljung-Box")
+
+# Imprimir los resultados
+ljung_box_test
+```
+<p style="text-align: justify;">El valor p de 0.2024 indica que no hay suficiente evidencia para rechazar la hipótesis nula de no autocorrelación en los residuos. En otras palabras, no se encuentra evidencia significativa de autocorrelación en los residuos del modelo.</p>
+
+**Homocedasticidad**
+```{r}
+bptest(model16_ww)
+```
+Los residuos son homocedasticos
+
+**Resumen**
+
+* Normalidad de residuos: NO
+* Independencia: SÍ
+* Homocedasticidad: SÍ
 
 ### (e)
-Compare ambos ajustes realizados y concluya.
+<p style="text-align: justify;">Compare ambos ajustes realizados y concluya.</p>
 
+
+```{r}
+summary(model16_ww)
+```
+Se observa que el modelo con pesos explica la variable respuesta un 75,92% a diferencia del modelo inicial que explicaba el 50.54%, de esta forma se observa que el vector de pesos bajo la influencia de los valores extremos.
+
+```{r}
+par(mfrow=c(2,2))
+plot(model16_ww)
+par(mfrow=c(1,1))
+```
 
