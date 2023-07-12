@@ -1,0 +1,185 @@
+---
+title: "Ejercicios de la Clase 4"
+subtitle: "Variables Regresoras Categórica"
+author: "Jose Valdes"
+date: "2023-07-09"
+output:
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  word_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+
+```{r setup, include=FALSE}
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+
+knitr::opts_chunk$set(
+  echo = FALSE,
+  warning = FALSE,
+  message = FALSE,
+  error = FALSE)
+```
+
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+```
+Se realiza validación de la instalación de los paquetes necesarios para ejecutar el script
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("carData","dplyr")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+library(carData)
+library(dplyr)
+
+
+```
+
+
+```{r}
+#clase 5 de la cursada
+# Una predictora categórica con dos niveles
+library(carData) 
+library(dplyr)
+mod1= lm(salary ~ sex, data = Salaries)
+summary(mod1)
+```
+```{r}
+Salaries
+```
+
+```{r}
+summary(Salaries)
+```
+
+
+## Una predictora categórica con dos niveles
+
+Si queremos cambiar el nivel de base contra el que se contraste
+
+```{r}
+# veamos cómo crea automáticamente la dummy
+contrasts(Salaries$sex)
+#Si se desea recodificar el campo Sexo
+Salaries = Salaries %>% mutate(sex = relevel(sex, ref = 'Male'))
+```
+
+```{r}
+contrasts(Salaries$sex)
+```
+
+
+# <span style="color:darkred">Una predictora categórica con dos niveles</span>
+
+```{r}
+# veamos cómo queda el modelo cuando cambiamos el nivel de base
+mod2 = lm(salary ~ sex, data = Salaries)
+summary(mod2)
+```
+
+
+# <span style="color:darkred">Una predictora categórica con más de dos niveles</span>
+
+
+```{r}
+mod3 = lm(salary ~ rank , data = Salaries)
+summary(mod3)
+```
+```{r}
+contr = model.matrix(mod3)
+head(contr[, -1])
+```
+# <span style="color:darkred">Dos predictoras categóricas</span>
+
+A partir de la salida, identificar la cantidad de niveles de cada variable categ´orica
+y el nivel base.
+
+```{r}
+mod4 = lm(salary ~ rank + discipline , data = Salaries)
+summary(mod4)
+```
+# <span style="color:darkred">Una predictora categórica y otra continua</span>
+
+```{r}
+mod5 = lm(salary ~ yrs.since.phd + discipline , data = Salaries)
+summary(mod5)
+```
+## Predictoras categóricas y continuas con interacción
+
+
+
+
+```{r}
+#antro$Sexo=factor(antro$Sexo)  no se encuentra la base -- diapositiva 14
+#mod6 = lm(Peso ~ Estatura*Sexo + Edad meses , data = antro)
+#summary(mod6)
+```
+
+
+
+
+## Dos Factores Cruzados
+
+```{r}
+resistencia = c(15.29, 15.89, 16.02, 16.56, 15.46, 16.91, 16.99,
+17.27, 16.85, 16.35, 17.23, 17.81, 17.74, 18.02, 18.37, 12.07, 12.42,
+12.73, 13.02, 12.05, 12.92, 13.01, 12.21, 13.49, 14.01, 13.30, 12.82,
+12.49, 13.55, 14.53)
+templado = c(rep(c("rapido", "lento"), c(15,15)))
+grosor = rep(c(8, 16, 24), each = 5, times = 2)
+datos = data.frame(templado = templado, grosor = as.factor(grosor), resistencia = resistencia)
+head(datos)
+```
+
+```{r}
+summary(datos)
+```
+```{r}
+class(datos$templado)
+class(datos$grosor)
+class(datos$resistencia)
+```
+
+```{r}
+p1 = ggplot(data = datos, aes(x = templado, y = resistencia,fill=templado)) + geom_boxplot() + theme_bw()+scale_fill_brewer(palette="Dark2")
+p2 = ggplot(data = datos, aes(x = grosor, y = resistencia, fill =grosor)) + geom_boxplot() + theme_bw()+scale_fill_brewer(palette="Dark2")
+p3 = ggplot(data = datos, aes(x = templado, y = resistencia, colour =
+grosor)) + geom_boxplot() +
+theme_bw()+scale_fill_brewer(palette="Dark2")
+p3
+grid.arrange(p1, p2, ncol = 2)
+```
+
+
+
+## Regresión de Cuantiles
+
