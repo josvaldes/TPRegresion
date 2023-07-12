@@ -1,0 +1,77 @@
+---
+title: "clase 5"
+author: "Jose Valdes"
+date: "2023-07-11"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+```
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("gamlss","tidyverse","ggpubr","skimr")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+
+
+
+library(gamlss)
+library(tidyverse)
+library(ggpubr)
+library(skimr)
+
+```
+
+
+
+**Modelos GAM**
+
+```{r}
+library(gamlss)
+library(tidyverse)
+library(ggpubr)
+library(skimr)
+data('rent')
+datos <- rent %>% select(R, Fl, A, H, loc)
+#dato=datos %>% setNames(c('valor', 'metros', 'anio', 'calef', 'local'))
+colnames(datos) <- c('valor', 'metros', 'anio', 'calef', 'local')
+datos
+```
+
+
+
+
+```{r}
+mod_OLS <- gamlss(formula = valor ~ metros + anio + calef + local, family = NO, data = datos, trace = FALSE)
+summary(mod_OLS)
+```
+
+
+
+
+```{r}
+exp(mod_OLS$sigma.coefficients)
+```
+
