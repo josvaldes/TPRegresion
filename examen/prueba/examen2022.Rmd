@@ -1,0 +1,668 @@
+---
+title: "Examen año 2022"
+author: "Jose Valdes"
+date: "2023-07-12"
+output:
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  word_document:
+    toc: yes
+    toc_depth: '5'
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+```
+Se realiza validación de la instalación de los paquetes necesarios para ejecutar el script
+
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+library(readxl)
+library(ggplot2)
+library(MVN)
+library(gridExtra)
+library(aod)
+library(MASS)
+library(carData)
+library(car)
+library(robustbase)
+library(leaps)
+library(olsrr)
+
+```
+
+
+# <span style="color:darkred">Ejercicio 1 </span>
+En el archivo preciocasas.xlsx se han registrado respecto de 100 viviendas las siguientes variables:
+• impuestos: valor de impuesto anual de la vivienda.
+• dormitorios cantidad de ambientes de la vivienda.
+• banios: cantidad de baños del inmueble.
+• estrena: si es a estrenar.
+• precio: valor del alquiler de la vivienda
+• tamanio: superficie total de la vivienda.
+
+```{r}
+library(readxl)
+preciocasas<-read_excel("C:/Users/jose-/Downloads/preciocasas.xlsx")
+preciocasas
+```
+
+Se observa la distrubución  a través de un grafico:
+
+Diagrama de dispersión
+```{r}
+library(ggplot2)
+#Diagrama de dispersión precio en función del tamanio
+dd1=ggplot(preciocasas, aes(tamanio, precio)) + 
+  geom_point() + theme_minimal() + labs(title = "Diagrama de dispersi\u00F3n precio vs tamanio")
+dd1
+```
+
+Por la distribución de los datos se creeria que se podria realizar un ajuste lineal.
+
+1. Construir un modelo lineal simple para explicar el precio en función de la superficie y evaluar la bondad del ajuste.
+
+```{r} 
+modeleje1= lm(precio ~ tamanio, data = preciocasas )
+summary(modeleje1)
+```
+- El intercepto (constante) tiene una estimación de -50926.255 y es significativamente diferente de cero, lo que indica que hay un valor base en el precio que no depende del tamaño.
+- La variable "tamanio" tiene una estimación de 126.594, lo que significa que por cada unidad de aumento en el tamaño, se espera un aumento de 126.594 en el precio.
+- Ambos coeficientes (intercepto y tamanio) son estadísticamente significativos, ya que los valores p son muy pequeños (<0.001).
+- El coeficiente de determinación (R-cuadrado) es 0.6952, lo que indica que aproximadamente el 69.52% de la variabilidad en el precio se explica por el modelo.
+- El error estándar residual es 56190, lo que indica la dispersión promedio de los residuos alrededor de la línea de regresión.
+- El valor F es 223.5 con un valor p muy pequeño (<2.2e-16), lo que indica que el modelo es estadísticamente significativo y hay una relación lineal entre el tamaño y el precio.
+
+
+2. Realizar un análisis diagnóstico y de puntos influyentes e indicar si el modelo es adecuado.
+
+Análisis diagnóstico
+-Normalidad
+```{r}
+shapiro.test(preciocasas$tamanio)
+```
+Se rechaza normalidad de la variable tamanio.
+
+```{r}
+shapiro.test(preciocasas$precio)
+```
+
+Análisis de normalidad multivariada - Test de Henze Zirkler
+
+```{r}
+#Analizamos normalidad bivariada
+library(MVN)
+#Usamos Test Henze-Zirkler para evaluar normalidad multivariada (bivariada en este caso)
+respuesta_testHZ<-mvn(preciocasas , mvnTest = "hz")
+respuesta_testHZ
+```
+Se realiza el test de correlación de Spearman debio a que no se observa que las variables sean normales entre ellas.
+
+```{r}
+cor.test(preciocasas$precio,preciocasas$tamanio, method="spearman", exact = FALSE)
+```
+Se rechaza la hipotesis nula de que no hay correlacion entre las variables, en tal sentido, se evidencia correlación entre las variables. Con relación a las variables análizadas precio y tamanio, estas corresponde a una correlacion positiva de alrededor del 74.17 %. A continuacion se presente un correlograma para un analisis mas amplio del conjunto de datos:
+
+```{r}
+library(corrplot)
+corrplot(cor(preciocasas,method="s"))
+```
+
+
+normalidad de los residuos del modelo
+```{r}
+shapiro.test(modeleje1$residuals)
+```
+Tampoco los residuos del modelo son normales.
+
+
+- homocedastisidad
+
+```{r}
+preciocasas2<-preciocasas
+preciocasas2$prediccion <- modeleje1$fitted.values 
+preciocasas2$residuos <- modeleje1$residuals
+
+ggplot(data = preciocasas2, aes(x = prediccion, y = residuos)) + 
+  geom_point(aes(color = residuos)) + 
+  scale_color_gradient2(low = "blue3", mid = "grey", high = "red") + 
+  geom_hline(yintercept = 0) + geom_segment(aes(xend = prediccion, yend = 0), alpha = 0.2) + 
+  labs(title = "Distribución de los residuos", x = "predicción modelo", y = "residuo") + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+```
+Paraciera tener estructura, los residuos se entienden que no son homocedasticos.
+
+```{r}
+library(lmtest) #carga la librería lmtest
+bptest(modeleje1)
+```
+Se corrobora rechazo de la hipotesis nula de homecedastidad, los residuos son heterosedasticos.
+
+- Independencia
+
+```{r}
+dwtest(modeleje1)
+```
+Se rechaza Ho, la hipótesis alternativa indica que existe una autocorrelación positiva mayor que cero en los residuos del modelo. Esto significa que hay evidencia de autocorrelación en los residuos del modelo, lo que sugiere que las observaciones están correlacionadas entre sí en cierta medida.
+
+
+
+Outliers, puntos influyentes, y de alto leverage
+
+
+Análisis de residuos y residuos estudentizados
+
+```{r}
+par(mfrow=c(2,2))
+plot(modeleje1)
+```
+
+```{r}
+summary(influence.measures(model = modeleje1))
+```
+```{r}
+
+which(dfbetas(modeleje1)[,2]>1)
+```
+```{r}
+n<-length(preciocasas$precio)
+p<-length(modeleje1$coefficients)
+which(dffits(modeleje1)>2 * sqrt(p / n))
+```
+Otros puntos influyentes
+
+```{r}
+library(car)
+influencePlot(model = modeleje1)
+```
+
+```{r}
+influenceIndexPlot(modeleje1, vars='Bonf', las=1,col='green')
+```
+
+```{r}
+outlierTest(modeleje1)
+```
+
+
+Se confirma la observación No. 64 es un punto influyent y outlier. La Observación 6 y 9 son de que resaltan entre los demas puntos influyentes.
+
+El modelo no es adecuado porque no cumple los supuestos, aunque el R cuadro explica un 69,21 % de la variable respuesta no cumplen los supuestos de normalidad, varianza constante e independencia. Se debe validar una transformación.
+
+
+3. Realizar una transformaci´on de la variable respuesta para lograr normalidad en la distribuci´on de los residuos. Indicar si el modelo con esta transformaci´on resulta adecuado.
+
+```{r}
+library(MASS)
+box_cox_result <- boxcox(precio ~ tamanio, lambda = -2:2, data = preciocasas)
+```
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
+
+# Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente "tamanio".
+model2eje1 <- lm((precio)^(best_box_cox) ~ tamanio, data = preciocasas)
+
+summary(model2eje1)
+```
+En el modelo transformado se sigue observando que en general es significativo tanto de forma global como individual, el R cuadro baja un poco con relación al primer modelo pero aún sigue siendo representativo, 65.66%.
+
+Se realiza analisis de los supuestos
+
+**Normalidad**
+
+```{r}
+shapiro.test(model2eje1$residuals)
+```
+Se rechaza normalidad, pero se observa que se acerca a la zona de no rechazo.
+
+**Homocedastisidad**
+
+```{r}
+preciocasas3<-preciocasas
+preciocasas3$prediccion <- model2eje1$fitted.values 
+preciocasas3$residuos <- model2eje1$residuals
+
+ggplot(data = preciocasas3, aes(x = prediccion, y = residuos)) + 
+  geom_point(aes(color = residuos)) + 
+  scale_color_gradient2(low = "blue3", mid = "grey", high = "red") + 
+  geom_hline(yintercept = 0) + geom_segment(aes(xend = prediccion, yend = 0), alpha = 0.2) + 
+  labs(title = "Distribución de los residuos", x = "predicción modelo", y = "residuo") + 
+  theme_bw() + 
+  theme(plot.title = element_text(hjust = 0.5), legend.position = "none")
+```
+
+```{r}
+bptest(model2eje1)
+```
+Los residuos son homocedasticos, con relación al modelo anterior se observa que se mejora para ser residuos homocedasticos.
+
+**Independencia**
+
+```{r}
+dwtest(model2eje1)
+```
+Se sigue rechazando Ho, existe autocorrelacion de los residuos del modelo.
+
+
+Se intenta con un tercer modelo
+
+```{r}
+# Basado que el lamda optimo dio best_box_cox = 0.3030303, se intenta aproximandolo a cero
+model3eje1 <- lm(log10(precio) ~ tamanio, data = preciocasas)
+summary(model3eje1)
+```
+
+**Normalidad**
+```{r}
+shapiro.test(model3eje1$residuals)
+```
+
+Sigue sin cumplir normalidad
+
+```{r}
+model4eje1 <- lm((precio) ~ log10(tamanio), data = preciocasas)
+summary(model4eje1)
+```
+**Normalidad**
+```{r}
+shapiro.test(model4eje1$residuals)
+```
+Sigue sin cumplir normalidad
+
+```{r}
+model5eje1 <- lm(log10(precio) ~ log10(tamanio), data = preciocasas)
+summary(model5eje1)
+```
+**Normalidad**
+```{r}
+shapiro.test(model5eje1$residuals)
+```
+Se cumple el supuesto de normalidad, esto muy cerca de la zona de rechazo.
+
+
+**Homocedasticidad**
+```{r}
+bptest(model5eje1)
+```
+Se cumple el supuesto de homocedastisidad de los residuos.
+
+
+**Independencia**
+```{r}
+dwtest(model5eje1)
+```
+Se cumple independencia.
+
+El modelo 5 cumple los supuestos y se podria utilizar para explicar la variable precio en funcion de tamanio.
+
+
+```{r}
+#Funcion de cumplimientos de supuestos
+Respuesta=0
+cumplimientoSupuestos <- function(modeloLineal) {
+  #Supuesto de normalidad
+  Normalidad=shapiro.test(modeloLineal$residuals)
+    if (Normalidad$p.value>0.05){
+      Respuesta[1]="Normal"
+    } else {
+      Respuesta[1]="No es normal"
+    }
+  #Supuesto de homocedastisidad
+  homocedastisidad=bptest(modeloLineal)
+    if (Normalidad$p.value>0.05){
+      Respuesta[2]="homocedastico"
+    }else {
+      Respuesta[2]="No es homocedastico"
+    }
+  #Supuesto de independencia
+  independencia=dwtest(modeloLineal)
+    if (Normalidad$p.value>0.05){
+      Respuesta[3]="independiente"
+    }else {
+      Respuesta[3]="No es independiente"
+    }
+  
+  return(Respuesta)
+  
+}
+
+#cumplimientoSupuestos(model5eje1)
+```
+Se resume a continuación los supuestos de los modelos trabajados:
+
+```{r}
+cumplimientoSupuestos(model5eje1)
+```
+
+
+```{r}
+cumplimientoSupuestos(model4eje1)
+```
+```{r}
+cumplimientoSupuestos(model3eje1)
+```
+```{r}
+cumplimientoSupuestos(model2eje1)
+```
+```{r}
+cumplimientoSupuestos(modeleje1)
+```
+función para encontrar la mejor transformación box y cox
+
+```{r}
+mejorBoxYCox<- function(independiente, dependiente,datos){
+  box_cox_result <- boxcox(independiente ~ dependiente, lambda = -2:2, data = datos)
+  
+  # Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+  best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
+
+  # Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a    la     potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable       independiente "tamanio".
+  if (best_box_cox==0){
+    model <- lm((independiente)^(best_box_cox) ~ dependiente, data = datos)
+    
+  } else {
+    model <- lm(log10(independiente) ~ dependiente, data = datos)
+  }
+  
+  
+  
+  return(cumplimientoSupuestos(model))
+}
+
+mejorBoxYCox(preciocasas$precio,preciocasas$tamanio,preciocasas)
+
+```
+4. Eliminar la observación 64 y ajustar nuevamente el segundo modelo evaluando su validez.
+
+```{r}
+# Eliminar la observación con id igual a 64
+preciocasas_sin_obs64 <- subset(preciocasas, caso != 64)
+preciocasas_sin_obs64
+```
+
+```{r}
+modeleje1p4= lm(precio ~ tamanio, data = preciocasas_sin_obs64 )
+summary(modeleje1p4)
+```
+```{r}
+cumplimientoSupuestos(modeleje1p4)
+```
+Se observa que al retirar la observacion 64 el modelo lineal sensillo cumple los supuesto, ademas el r cuadro mejora a un 75.6%.
+
+
+```{r}
+promedioseje1p4 <- colMeans(preciocasas_sin_obs64)
+ggplot(preciocasas_sin_obs64, aes(tamanio, precio)) + 
+  geom_point() +
+  geom_vline(xintercept=promedioseje1p4[7],linetype="dotted") + 
+  geom_hline(yintercept=promedioseje1p4[6],linetype="dotted") +
+  geom_smooth(method = "lm", se = TRUE, color = "black") +
+  theme_minimal()
+```
+
+
+```{r}
+ICcompleto<-predict(modeleje1p4, interval="confidence",level=0.95)
+IPcompleto<-predict(modeleje1p4,newdata=data.frame(tamanio=preciocasas_sin_obs64$tamanio), interval="prediction",level=0.95)
+datos<-data.frame(tamanio=preciocasas_sin_obs64$tamanio,precio=preciocasas_sin_obs64$precio,IPcompleto)             
+
+ggplot(data = datos, mapping = aes(x = tamanio, y = precio)) + 
+  geom_point(color = "firebrick", size = 2) + 
+  labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
+  geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
+  geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") + 
+  theme_bw() + theme(plot.title = element_text(hjust = 0.5)) 
+```
+
+```{r}
+#Grafica del primer modelo con el conjunto de datos total
+ICcompleto<-predict(modeleje1, interval="confidence",level=0.95)
+IPcompleto<-predict(modeleje1,newdata=data.frame(tamanio=preciocasas$tamanio), interval="prediction",level=0.95)
+datos<-data.frame(tamanio=preciocasas$tamanio,precio=preciocasas$precio,IPcompleto)             
+
+ggplot(data = datos, mapping = aes(x = tamanio, y = precio)) + 
+  geom_point(color = "firebrick", size = 2) + 
+  labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
+  geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
+  geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") + 
+  theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+```{r}
+#GRafica del mejor modelo con transformacion
+ICcompleto<-predict(model5eje1, interval="confidence",level=0.95)
+IPcompleto<-predict(model5eje1,newdata=data.frame(tamanio=preciocasas$tamanio), interval="prediction",level=0.95)
+datos<-data.frame(tamanio=preciocasas$tamanio,precio=preciocasas$precio,IPcompleto)             
+
+ggplot(data = datos, mapping = aes(x = tamanio, y = precio)) + 
+  geom_point(color = "firebrick", size = 2) + 
+  labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
+  geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
+  geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
+  geom_smooth(method = "lm", se = TRUE, color = "black") + 
+  theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+```
+
+
+
+función grafica con intervalos
+```{r}
+graficaMLIntervalos <- function(modelolineal,independiente,dependiente,dataset){
+  ICcompleto<-predict(modelolineal, interval="confidence",level=0.95)
+  IPcompleto<-predict(modelolineal,newdata=data.frame(independiente), interval="prediction",level=0.95)
+  datos<-data.frame(independiente,dependiente,IPcompleto)             
+
+ grafica <- ggplot(data = datos, mapping = aes(x = independiente, y = precio)) + 
+    geom_point(color = "firebrick", size = 2) + 
+    labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
+    geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
+    geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
+    geom_smooth(method = "lm", se = TRUE, color = "black") + 
+    theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+ 
+ return(grafica)
+}
+
+```
+
+```{r}
+tamanio=preciocasas_sin_obs64$tamanio
+precio=preciocasas_sin_obs64$precio
+graficaMLIntervalos(modeleje1p4,tamanio,precio,preciocasas_sin_obs64)
+```
+```{r}
+graficaMLIntervalos(model5eje1,tamanio,precio,preciocasas)
+```
+
+5. Ajustar un modelo robusto y evaluar el promedio de los errores absolutos cometidos. Comparar con el mejor modelo lineal
+disponible.
+
+```{r}
+library(robustbase)
+ajusterobP5 <- lmrob(precio ~ ., data = preciocasas)
+summary(ajusterobP5)
+```
+
+
+```{r}
+#promedio de los errores absolutos del modelo robusto
+# Acceder al resumen del modelo
+resumen_modelo <- summary(ajusterobP5)
+
+# Obtener los residuos del modelo
+residuos <- resumen_modelo$residuals
+
+# Calcular el promedio de los errores absolutos
+promedio_errores_absolutos <- mean(abs(residuos))
+
+promedio_errores_absolutos
+```
+```{r}
+#promedio de los errores absolutos del mejor modelo lineal (model5eje1) #este fue tranformado para el cumplimiento de los supuestos
+# Acceder al resumen del modelo
+resumen_modelo2 <- summary(model5eje1)
+
+# Obtener los residuos del modelo
+residuos2 <- resumen_modelo2$residuals
+
+# Calcular el promedio de los errores absolutos
+promedio_errores_absolutos_Mejor_ML <- mean(abs(residuos2))
+
+promedio_errores_absolutos_Mejor_ML
+```
+Se observa un mayor error promedio de los errores en el modelo robusto que en el lineal.
+
+
+6. Utilizar un método de selección de variables para proponer un modelo multivariado. Analizar el cumplimiento de los
+supuestos.
+
+```{r}
+require(leaps)
+mejores_modelos <- regsubsets(precio ~ ., data = preciocasas, nvmax = 5) 
+summary(mejores_modelos)
+```
+
+```{r}
+summary(mejores_modelos)$adjr2
+```
+```{r}
+# se identifica qué modelo tiene el valor máximo de R ajustado 
+which.max(summary(mejores_modelos)$adjr2)
+```
+```{r}
+library(ggplot2) 
+p <- ggplot(data = data.frame(n_predictores = 1:5, R_ajustado = summary(mejores_modelos)$adjr2), aes(x = n_predictores, y = R_ajustado)) + 
+  geom_line() + 
+  geom_point() 
+# Se identifica en rojo el máximo 
+p <- p + geom_point(aes(x=n_predictores[which.max(summary(mejores_modelos)$adjr2)], y=R_ajustado[which.max(summary(mejores_modelos)$adjr2)]), colour = "red", size = 3) 
+p <- p + scale_x_continuous(breaks = c(0:5)) + theme_bw() + 
+  labs(title = "R2_ajustado vs número de predictores", x = "número predictores") 
+p
+```
+```{r}
+coef(object = mejores_modelos, id = 5)
+```
+
+```{r}
+mejores_modelos_backward <- regsubsets(precio ~ ., data = preciocasas, nvmax = 5, method = "backward") 
+# se identifica el valor máximo de R ajustado 
+which.max(summary(mejores_modelos_backward)$adjr2)
+```
+```{r}
+coef(object = mejores_modelos_backward, 5)
+```
+```{r}
+mejores_modelos_forward <- regsubsets(precio ~ ., data = preciocasas, nvmax = 5, method = "forward") 
+# se identifica el valor máximo de R ajustado 
+which.max(summary(mejores_modelos_forward)$adjr2)
+```
+
+```{r}
+coef(object = mejores_modelos_forward, 5)
+```
+
+Todas las combinaciones de modelos
+```{r}
+library(olsrr)
+lm.fit1 <- lm(precio ~ ., data = preciocasas)
+k <- ols_step_all_possible(lm.fit1)
+
+# AIC: Akaike Information Criteria 
+# SBIC: Sawa's Bayesian Information Criteria 
+# SBC: Schwarz Bayesian Criteria 
+# MSEP: Estimated error of prediction, assuming multivariate normality 
+# FPE: Final Prediction Error 
+# HSP: Hocking's Sp 
+# APC: Amemiya Prediction Criteria
+
+k # OJO: en RStudio se ven menos columnas en la salida
+```
+```{r}
+plot(k)# el eje horizontal representa la cantidad de variables utilizadas en cada modelo.
+```
+```{r}
+k_best <- ols_step_best_subset(lm.fit1)
+
+# AIC: Akaike Information Criteria 
+# SBIC: Sawa's Bayesian Information Criteria 
+# SBC: Schwarz Bayesian Criteria 
+# MSEP: Estimated error of prediction, assuming multivariate normality 
+# FPE: Final Prediction Error 
+# HSP: Hocking's Sp 
+# APC: Amemiya Prediction Criteria
+
+k_best
+```
+```{r}
+plot(k_best)# el eje horizontal representa la cantidad de variables utilizadas en cada modelo.
+```
+
+```{r}
+modeleje1P6= lm(precio ~ tamanio+caso+impuestos+estrena, data = preciocasas )
+summary(modeleje1P6)
+```
+```{r}
+#modelo lineal simple con la seleccion de las mejores variables
+cumplimientoSupuestos(modeleje1P6)
+```
+```{r}
+#modelo lineal simple transformado con la seleccion de las mejores variables
+model2eje1P6= lm(log10(precio) ~ log10(tamanio+caso+impuestos+estrena), data = preciocasas )
+summary(model2eje1P6)
+```
+```{r}
+cumplimientoSupuestos(model2eje1P6)
+```
+```{r}
+#modelo lineal robusto con la seleccion de las mejores variables
+ajusterobP6 <- lmrob(precio ~ tamanio+caso+impuestos+estrena, data = preciocasas)
+summary(ajusterobP6)
+```
+
+```{r}
+cumplimientoSupuestos(ajusterobP6)
+```
+Se observa el cumplimiento de los supuestos sobre el modelo con transformación, en tal sentido, el mejor modelo que explica la variabilidad del precio en función del tamaño es model2eje1P6, un modelo lineal simple con transformación, con un R cuadrado de 75.29%.
+
+
+7. Le parece adecuado un modelo GAMLSS en este caso? Justifique.
+
+
