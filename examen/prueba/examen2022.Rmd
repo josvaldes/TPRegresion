@@ -44,7 +44,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -61,6 +61,7 @@ library(car)
 library(robustbase)
 library(leaps)
 library(olsrr)
+library(gamlss)
 
 ```
 
@@ -93,7 +94,7 @@ dd1
 
 Por la distribución de los datos se creeria que se podria realizar un ajuste lineal.
 
-1. Construir un modelo lineal simple para explicar el precio en función de la superficie y evaluar la bondad del ajuste.
+## 1. Construir un modelo lineal simple para explicar el precio en función de la superficie y evaluar la bondad del ajuste.
 
 ```{r} 
 modeleje1= lm(precio ~ tamanio, data = preciocasas )
@@ -107,7 +108,7 @@ summary(modeleje1)
 - El valor F es 223.5 con un valor p muy pequeño (<2.2e-16), lo que indica que el modelo es estadísticamente significativo y hay una relación lineal entre el tamaño y el precio.
 
 
-2. Realizar un análisis diagnóstico y de puntos influyentes e indicar si el modelo es adecuado.
+## 2. Realizar un análisis diagnóstico y de puntos influyentes e indicar si el modelo es adecuado.
 
 Análisis diagnóstico
 -Normalidad
@@ -224,7 +225,7 @@ Se confirma la observación No. 64 es un punto influyent y outlier. La Observaci
 El modelo no es adecuado porque no cumple los supuestos, aunque el R cuadro explica un 69,21 % de la variable respuesta no cumplen los supuestos de normalidad, varianza constante e independencia. Se debe validar una transformación.
 
 
-3. Realizar una transformaci´on de la variable respuesta para lograr normalidad en la distribuci´on de los residuos. Indicar si el modelo con esta transformaci´on resulta adecuado.
+## 3. Realizar una transformaci´on de la variable respuesta para lograr normalidad en la distribuci´on de los residuos. Indicar si el modelo con esta transformaci´on resulta adecuado.
 
 ```{r}
 library(MASS)
@@ -407,7 +408,7 @@ mejorBoxYCox<- function(independiente, dependiente,datos){
 mejorBoxYCox(preciocasas$precio,preciocasas$tamanio,preciocasas)
 
 ```
-4. Eliminar la observación 64 y ajustar nuevamente el segundo modelo evaluando su validez.
+## 4. Eliminar la observación 64 y ajustar nuevamente el segundo modelo evaluando su validez.
 
 ```{r}
 # Eliminar la observación con id igual a 64
@@ -511,8 +512,7 @@ graficaMLIntervalos(modeleje1p4,tamanio,precio,preciocasas_sin_obs64)
 graficaMLIntervalos(model5eje1,tamanio,precio,preciocasas)
 ```
 
-5. Ajustar un modelo robusto y evaluar el promedio de los errores absolutos cometidos. Comparar con el mejor modelo lineal
-disponible.
+## 5. Ajustar un modelo robusto y evaluar el promedio de los errores absolutos cometidos. Comparar con el mejor modelo lineal disponible.
 
 ```{r}
 library(robustbase)
@@ -550,8 +550,7 @@ promedio_errores_absolutos_Mejor_ML
 Se observa un mayor error promedio de los errores en el modelo robusto que en el lineal.
 
 
-6. Utilizar un método de selección de variables para proponer un modelo multivariado. Analizar el cumplimiento de los
-supuestos.
+## 6. Utilizar un método de selección de variables para proponer un modelo multivariado. Analizar el cumplimiento de los supuestos.
 
 ```{r}
 require(leaps)
@@ -663,6 +662,98 @@ cumplimientoSupuestos(ajusterobP6)
 Se observa el cumplimiento de los supuestos sobre el modelo con transformación, en tal sentido, el mejor modelo que explica la variabilidad del precio en función del tamaño es model2eje1P6, un modelo lineal simple con transformación, con un R cuadrado de 75.29%.
 
 
-7. Le parece adecuado un modelo GAMLSS en este caso? Justifique.
+## 7. Le parece adecuado un modelo GAMLSS en este caso? Justifique.
+
+```{r}
+mod_OLS <- gamlss( formula = precio ~ pb(tamanio)+caso+impuestos+estrena, family = NO, data = preciocasas, trace = FALSE)
+summary(mod_OLS)
+```
+
+
+```{r}
+plot(mod_OLS)
+```
+```{r}
+cumplimientoSupuestos(mod_OLS)
+```
+```{r}
+wp(mod_OLS)
+```
+
+
+```{r}
+
+mod_GAMLSS <- gamlss(formula = precio ~ pb(tamanio)+caso+impuestos+estrena, sigma.formula = ~ pb(tamanio)+caso+impuestos+estrena, family = GA, data = preciocasas, trace = FALSE )
+summary(mod_GAMLSS)
+```
+
+```{r}
+plot(mod_GAMLSS)
+```
+
+
+```{r}
+cumplimientoSupuestos(mod_GAMLSS)
+```
+
+
+```{r}
+# Efecto individuales de los Predictores (GAMLSS)
+term.plot(mod_GAMLSS, parameter = 'sigma',ask = FALSE, rug = TRUE)
+```
+
+```{r}
+# Contribución de cada uno de los predictores (GAMLSS)
+drop1(mod_GAMLSS, parameter = 'sigma', parallel = 'multicore', ncpus = 4)
+```
+```{r}
+drop1(mod_GAMLSS, parameter = 'mu', parallel = 'multicore', ncpus = 4)
+```
+
+```{r}
+mod_GAMLSS2 <- gamlss(formula = precio ~ pb(tamanio)+caso+impuestos+estrena, sigma.formula = ~ pb(tamanio), family = GA, data = preciocasas, trace = FALSE )
+summary(mod_GAMLSS2)
+```
+
+```{r}
+plot(mod_GAMLSS2)
+```
+
+```{r}
+cumplimientoSupuestos(mod_GAMLSS2) #creo que esta funcion solo serviria para modelos lineales simple, pendiente de validar
+```
+
+
+```{r}
+# Contribución de cada uno de los predictores (GAMLSS)
+drop1(mod_GAMLSS2, parameter = 'sigma', parallel = 'multicore', ncpus = 4)
+drop1(mod_GAMLSS2, parameter = 'mu', parallel = 'multicore', ncpus = 4)
+```
+```{r}
+# Worm plot de los residuos modelo 1
+wp(mod_GAMLSS, ylim.all = 0.5)
+```
+```{r}
+# Worm plot de los residuos modelo 2
+wp(mod_GAMLSS2, ylim.all = 0.5)
+```
+La inspección visual del wormplot de los dos modelos GAMLSS indica que estos modelos tienen los
+residuos dentro del rango de variación aceptable.
+
+```{r}
+#Comparamos los modelos ajustados:
+GAIC(mod_OLS,mod_GAMLSS, mod_GAMLSS2)
+```
+
+De acuerdo con el criterio GAIC, el modelo GAMLSS2 es el que mejor explica la relación con el precio utilizando los mismos predictores.
+
+En tal sentido, si sería adecuado utilizar modelos GAMLSS debido a que con estos se puede analizar conjuntos de datos que tengan comportamientos no lineales y exista presencia de heterocedasticidad.
+
+## 8. Resuma sus conclusiones.
+
+En general se puede concluir que del conjunto de datos preciocasas, la variable precio se puede predecir en función de la variable tamanio, esta variable tiene un comportamiento no lineal y la implementación de modelos GAMLSS permite una mejor interpretación del modelo.  
+
+
+# <span style="color:darkred">Ejercicio 2 </span>
 
 
