@@ -44,7 +44,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest","ResourceSelection","vcd","pROC","ROCR")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -65,6 +65,10 @@ library(gamlss)
 library(lsr)
 library(ggpubr)
 library(lmtest)
+library(ResourceSelection)
+library(vcd) 
+library(pROC)
+library(ROCR)
 
 ```
 
@@ -1006,7 +1010,219 @@ Para evaluar la calidad de ajuste del modelo logístico, se pueden utilizar vari
 
 Deviance: La deviance es una medida de la discrepancia entre el modelo ajustado y los datos observados. Un valor de deviance más bajo indica un mejor ajuste del modelo. Se puede comparar la deviance del modelo ajustado con la deviance del modelo nulo (modelo sin covariables) para evaluar la mejora en el ajuste. Si la deviance del modelo ajustado es significativamente más baja que la del modelo nulo, indica que el modelo tiene un buen ajuste.
 
+```{r}
+#Validación del Deviance
+modelo_logistico$deviance
+modelo_logistico2$deviance
+modelo_logistico3$deviance
+modelo_logistico4$deviance
+
+```
+Se observa que el modelo elegido por p-valor sigue siendo elegido por menor deviance, modelo_logistico4.
+
 AIC (Akaike Information Criterion): El criterio de información de Akaike es una medida de la calidad del ajuste del modelo que tiene en cuenta la complejidad del modelo. Se calcula utilizando la deviance del modelo y el número de parámetros del modelo. Un valor de AIC más bajo indica un mejor ajuste del modelo. Al comparar diferentes modelos, el modelo con un AIC más bajo se considera preferido.
+
+Este se desarrollo en el punto anterior y eligio al modelo 4.
 # 3. Interpretar los coeficientes del modelo elegido.
+
+```{r}
+modelo_logistico4$coefficients
+```
+Coeficiente de Intercepto: -1.086905e+01
+Este coeficiente representa el efecto del término constante en el modelo cuando todas las variables predictoras son cero. En este caso, el intercepto indica el logaritmo de la odds (relación de probabilidades) de que el evento de interés ocurra cuando todas las variables predictoras son cero.
+
+Coeficiente de ingreso: 3.033450e-06
+Este coeficiente indica cómo cambia la log-odds (logaritmo de la odds) del evento de interés por cada unidad de cambio en la variable "ingreso". Dado que el coeficiente es positivo, un incremento en el valor de "ingreso" se asociaría con un aumento en la log-odds del evento de interés.
+
+Coeficiente de estudianteYes: -6.467758e-01
+Este coeficiente representa el efecto de la variable categórica "estudiante" cuando su valor es "Yes", en comparación con cuando su valor es "No". Un coeficiente negativo indica que ser estudiante está asociado con una disminución en la log-odds del evento de interés en comparación con no ser estudiante.
+
+Coeficiente de balance: 5.736505e-03
+Este coeficiente indica cómo cambia la log-odds del evento de interés por cada unidad de cambio en la variable "balance". Dado que el coeficiente es positivo, un aumento en el valor de "balance" se asocia con un aumento en la log-odds del evento de interés.
+
+Es importante tener en cuenta que los coeficientes están en la escala logarítmica debido a la naturaleza del modelo logístico. Para interpretar los efectos en términos de probabilidades, se pueden aplicar transformaciones, como la exponenciación de los coeficientes para obtener odds ratios o la aplicación de la función de enlace inversa (por ejemplo, la función logística) para obtener probabilidades directamente.
+
 # 4. Evaluar la calidad de clasificación y compararlo con otro método de clasificación.
+
+
+```{r}
+library(ResourceSelection)
+hoslem.test(morosos$bin_mora, fitted(modelo_logistico4))
+```
+El resultado del test de bondad de ajuste de Hosmer-Lemeshow indica que no hay evidencia suficiente para rechazar la hipótesis nula de que el modelo se ajusta bien a los datos. El valor de p obtenido es 0.8846, lo que indica que no hay una diferencia significativa entre los valores observados y los valores esperados según el modelo. En otras palabras, el modelo parece ajustarse adecuadamente a los datos según esta prueba específica de bondad de ajuste.
+
+Matriz de confusión
+
+```{r}
+library(vcd) 
+predicciones <- ifelse(test = modelo_logistico4$fitted.values > 0.5, yes = 1, no = 0) 
+matriz_confusion <- table(morosos$bin_mora, predicciones, dnn = c("observaciones", "predicciones")) 
+matriz_confusion
+```
+
+```{r}
+mosaic(matriz_confusion, shade = T, colorize = T, gp = gpar(fill = matrix(c("green3", "red2", "red2", "green3"), 2, 2)))
+```
+La matriz de confusión muestra un problema de calificación de clase 1
+
+Separación en muestra de entrenamiento y test para obtener métricas de test
+
+```{r}
+library(pROC)
+set.seed(20231)
+entrenamiento<-sample(1:500,70)
+
+validacion<-c(1:500)[-entrenamiento]
+
+morosos_train<-morosos[entrenamiento,]
+morosos_test<-morosos[validacion,]
+bin_mora_train<-morosos$bin_mora[entrenamiento]
+table(bin_mora_train)
+```
+```{r}
+bin_mora_test<-morosos$bin_mora[validacion]
+table(bin_mora_test)
+```
+
+```{r}
+morosos_new<-data.frame(morosos_test)
+morosos_new$origen<-bin_mora_test
+
+# Se obtienen las probabilidades predichas para cada clase 
+predicciones <- predict(object = modelo_logistico4, newdata = morosos_new, type = "response") 
+
+curva_roc <- roc(response = morosos_new$origen, predictor = predicciones, levels = c(0, 1), direction = "<") 
+
+```
+
+
+```{r}
+curva_roc
+```
+
+```{r}
+# Gráfico de la curva 
+#plot(curva_roc)
+plot(curva_roc,col="red",lwd=2,main="ROC test")
+legend("bottomright",legend=paste("AUC=",round(auc(curva_roc),4)))
+```
+Se observa una curva ROC que explica el 96,62% de la variable respuesta, muestra ser un buen modelo para detectar a los morosos.
+
+```{r}
+# otra forma
+#install.packages("ROCR", repos = "http://cran.us.r-project.org", dependencies = TRUE)
+library(ROCR)
+
+real <- morosos_new$origen
+
+predic <-prediction(predicciones,real)
+perf <-  performance(predic, "tpr","fpr")
+
+plot(perf,
+     main = "Curva ROC",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+abline(a=0,b=1,col="blue",lty=2)
+grid()
+auc <- as.numeric(performance(predic,"auc")@y.values)
+legend("bottomright",legend=paste(" AUC =",round(auc,4)))
+```
+
+funcion curva ROC
+```{r}
+curvaROC <- function(muestra,porcentaje,dataset,x,modelo){
+ #muestra: numero de muestra de la población
+ #porcentaje: Porcentaje de datos de la muestra para el test
+ #dataset: Conjunto de datos utilizado
+ #x: Variable predictora
+ #modelo: Modelo utilizado para hacer el ajuste.
+  
+  set.seed(20231)
+  
+
+  entrenamiento<-sample(1:muestra,porcentaje)
+
+  validacion<-c(1:muestra)[-entrenamiento]
+  
+  
+  # Crear una nueva variable binaria para representar 'x'
+  dataset$bin_x <- ifelse(x == "Yes", 1, 0)
+
+  dataset_train<-dataset[entrenamiento,]
+  dataset_test<-dataset[validacion,]
+  bin_x_train<-dataset$bin_x[entrenamiento]
+  table(bin_x_train)
+  
+  bin_x_test<-dataset$bin_x[validacion]
+  dataset_new<-data.frame(dataset_test)
+  dataset_new$origen<-bin_x_test
+  
+  real <- dataset_new$origen
+
+  
+  dataset_new<-data.frame(dataset_test)
+  dataset_new$origen<-bin_x_test
+  # Se obtienen las probabilidades predichas para cada clase 
+  predicciones <- predict(object = modelo, newdata = dataset_new, type = "response") 
+  
+
+  predic <-prediction(predicciones,real)
+  perf <-  performance(predic, "tpr","fpr")
+
+  g=plot(perf,
+     main = "Curva ROC",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+  abline(a=0,b=1,col="blue",lty=2)
+  grid()
+  auc <- as.numeric(performance(predic,"auc")@y.values)
+  legend("bottomright",legend=paste(" AUC =",round(auc,4)))
+  return(g)
+}
+```
+
+
+
+```{r}
+mora=morosos$mora
+curvaROC(500,90,morosos,mora,modelo_logistico)
+curvaROC(500,90,morosos,mora,modelo_logistico2)
+curvaROC(500,90,morosos,mora,modelo_logistico3)
+curvaROC(500,90,morosos,mora,modelo_logistico4)
+curvaROC(500,90,morosos,mora,modelo_logistico5)
+```
+
+Precision : TP / (TP+FP)
+
+Recall : TP / (TP+FN)
+
+F1 Score : (2 * Precision * Recall) / (Precision+Recall)
+
+```{r}
+
+actual_values<-bin_mora_test
+predict_value<-predicciones
+table(ACTUAL=actual_values,PREDICTED=predict_value>0.5) # asumimos umbral de 0.5
+
+
+```
+```{r}
+pred<-predict_value>0.5
+TP<-length(actual_values[(actual_values==1)&(pred==1)])#15
+TN<-length(actual_values[(actual_values==0)&(pred==0)])#12
+FP<-length(actual_values[(actual_values==0)&(pred==1)])#1
+FN<-length(actual_values[(actual_values==1)&(pred==0)])#2
+
+precision<-TP/(TP+FP)
+precision
+```
+```{r}
+recall<-TP/(TP+FN)
+recall
+```
+
+```{r}
+f1_score<-(2*precision*recall)/(precision+recall) 
+f1_score
+```
 
