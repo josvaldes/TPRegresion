@@ -44,7 +44,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -62,6 +62,8 @@ library(robustbase)
 library(leaps)
 library(olsrr)
 library(gamlss)
+library(lsr)
+
 
 ```
 
@@ -756,4 +758,59 @@ En general se puede concluir que del conjunto de datos preciocasas, la variable 
 
 # <span style="color:darkred">Ejercicio 2 </span>
 
+Se desea saber si la dosis de ácido ascórbico y el tipo de bebida en la cual se lo administró a ciertos animales de
+laboratorio logró mayor desarrollo de los dientes en los mismo. Se utilizaron 60 replicaciones del experimento y se tienen grupos balanceados. La variable respuesta de interés es la longitud de los dientes frontales(len). Los resultados están en el archivo odonto.csv Se pide analizar, analítica y gráficamente, si:
 
+```{r}
+odonto<-read.csv("C:/Users/jose-/Downloads/odonto.csv")
+odonto
+```
+
+
+## 1. Existen diferencias estadísticamente significativas respecto de las dosis administradas?
+
+Se Compara los resultados según los niveles de ambas categorías.
+
+```{r}
+library(ggplot2) 
+library(gridExtra)
+
+odonto$dose<-factor(odonto$dose)
+
+p1 <- ggplot(data = odonto, mapping = aes(x = dose, y = len)) + geom_boxplot() + 
+  theme_bw() 
+p2 <- ggplot(data = odonto, mapping = aes(x = supp, y = len)) + geom_boxplot() + 
+  theme_bw() 
+p3 <- ggplot(data = odonto, mapping = aes(x = dose, y = len, colour = supp)) + 
+  geom_boxplot() + theme_bw() 
+grid.arrange(p1, p2,p3, ncol = 2)
+
+```
+analisis de interacciones
+```{r}
+interaction.plot(trace.factor = odonto$supp, x.factor = odonto$dose, response = odonto$len, fun = "mean", legend = TRUE, col = 2:3, type = "b")
+```
+```{r}
+interaction.plot(trace.factor = odonto$dose, x.factor = odonto$supp, response = odonto$len, fun = "mean", legend = TRUE, col = 2:3, type = "b")
+```
+```{r}
+ggplot(data = odonto, aes(x = dose, y = len, colour = supp, group = supp)) + 
+  stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + 
+  labs(y = "mean (resultado)") + theme_bw()
+```
+Al parecer existe una interacción entre las variables categoricas dose y supp
+
+```{r}
+anova_2vias <- aov(formula = len ~ dose*supp, data = odonto) 
+summary(anova_2vias)
+```
+```{r}
+library(lsr)
+etaSquared(anova_2vias)
+```
+
+
+## 2. Existen diferencias estad´ısticamente singificativas respeccto del tipo de veh´ıculo de administraci´on?
+## 3. La interacci´on entre estas variables es significativa?
+## 4. Se satisfacen los supuestos del modelo?
+## 5. Puede realizar una recomendaci´on?
