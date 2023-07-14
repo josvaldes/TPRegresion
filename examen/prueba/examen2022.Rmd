@@ -79,7 +79,7 @@ En el archivo preciocasas.xlsx se han registrado respecto de 100 viviendas las s
 
 ```{r}
 library(readxl)
-preciocasas<-read_excel("C:/Users/jose-/Downloads/preciocasas.xlsx")
+preciocasas<-read_excel("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/examen/prueba/preciocasas.xlsx")
 preciocasas
 ```
 
@@ -762,7 +762,7 @@ Se desea saber si la dosis de ácido ascórbico y el tipo de bebida en la cual s
 laboratorio logró mayor desarrollo de los dientes en los mismo. Se utilizaron 60 replicaciones del experimento y se tienen grupos balanceados. La variable respuesta de interés es la longitud de los dientes frontales(len). Los resultados están en el archivo odonto.csv Se pide analizar, analítica y gráficamente, si:
 
 ```{r}
-odonto<-read.csv("C:/Users/jose-/Downloads/odonto.csv")
+odonto<-read.csv("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/examen/prueba/odonto.csv")
 odonto
 ```
 
@@ -775,7 +775,9 @@ Se Compara los resultados según los niveles de ambas categorías.
 library(ggplot2) 
 library(gridExtra)
 
+# Se convierte la variables dose en factor
 odonto$dose<-factor(odonto$dose)
+odonto$supp<-factor(odonto$supp)
 
 p1 <- ggplot(data = odonto, mapping = aes(x = dose, y = len)) + geom_boxplot() + 
   theme_bw() 
@@ -786,31 +788,110 @@ p3 <- ggplot(data = odonto, mapping = aes(x = dose, y = len, colour = supp)) +
 grid.arrange(p1, p2,p3, ncol = 2)
 
 ```
-analisis de interacciones
+Parece existir interacción de las variables y diferencia de medias entre las categorías de la variable dose.
+
+Análisis de interacciones
+
 ```{r}
 interaction.plot(trace.factor = odonto$supp, x.factor = odonto$dose, response = odonto$len, fun = "mean", legend = TRUE, col = 2:3, type = "b")
 ```
+Se observa que parece que existe interacción entre las variables dose y supp.
+
 ```{r}
 interaction.plot(trace.factor = odonto$dose, x.factor = odonto$supp, response = odonto$len, fun = "mean", legend = TRUE, col = 2:3, type = "b")
 ```
+Para el caso de validar la interacción entre las variables trazando desde la variable dose no se logra ver interacción.
+
 ```{r}
 ggplot(data = odonto, aes(x = dose, y = len, colour = supp, group = supp)) + 
-  stat_summary(fun.y = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + 
+  stat_summary(fun = mean, geom = "point") + stat_summary(fun.y = mean, geom = "line") + 
   labs(y = "mean (resultado)") + theme_bw()
 ```
-Al parecer existe una interacción entre las variables categoricas dose y supp
+Se repite la primera grafica de interacción con otro comando y se obtiene una gráfica parecida, se concluye que existe una interacción entre las variables categóricas dose y supp.
 
 ```{r}
 anova_2vias <- aov(formula = len ~ dose*supp, data = odonto) 
 summary(anova_2vias)
 ```
+En base a los resultados:
+
+El factor dose muestra un efecto significativo en la variable respuesta (len) debido a que el valor de p es extremadamente pequeño (< 2e-16). Esto indica que la dosis tiene un impacto estadísticamente significativo en len.
+
+El factor supp también tiene un efecto significativo en len con un valor de p de 0.000231. Esto sugiere que el tipo de suplemento tiene un impacto significativo en la variable respuesta.
+
+Además, la interacción entre dose y supp también es significativa con un valor de p de 0.021860. Esto indica que el efecto de la dosis sobre la variable respuesta depende del tipo de suplemento utilizado.
+
+En general, estos resultados sugieren que tanto la dosis como el tipo de suplemento tienen un impacto significativo en la variable respuesta len, y que la interacción entre ambos factores también es relevante.
+
 ```{r}
 library(lsr)
 etaSquared(anova_2vias)
 ```
+Para el factor dose, el coeficiente eta cuadrado (eta.sq) es 0.70286419, lo que indica que el 70.29% de la variabilidad total de la variable respuesta (len) se puede explicar por la variabilidad en el factor dose. Esto sugiere que dose tiene un efecto muy grande y explica una cantidad significativa de la variabilidad observada en la variable respuesta.
 
+El coeficiente eta cuadrado parcial (eta.sq.part) para el factor dose es 0.7731092. Este valor indica la proporción de la variabilidad única explicada por dose, es decir, el efecto exclusivo de dose en la variable respuesta después de considerar otros factores en el modelo. En este caso, el 77.31% de la variabilidad única en len se puede atribuir al factor dose.
 
-## 2. Existen diferencias estad´ısticamente singificativas respeccto del tipo de veh´ıculo de administraci´on?
-## 3. La interacci´on entre estas variables es significativa?
+Para el factor supp, el coeficiente eta cuadrado (eta.sq) es 0.05948365, lo que indica que el 5.95% de la variabilidad total en len se puede explicar por la variabilidad en el factor supp. Esto sugiere que supp tiene un efecto más pequeño en comparación con dose en la explicación de la variabilidad en la variable respuesta.
+
+El coeficiente eta cuadrado parcial (eta.sq.part) para el factor supp es 0.2238254. Esto indica que el 22.38% de la variabilidad única en len se puede atribuir al factor supp después de tener en cuenta otros factores en el modelo.
+
+Para la interacción entre dose y supp (dose:supp), el coeficiente eta cuadrado (eta.sq) es 0.03137672, lo que indica que el 3.14% de la variabilidad total en len se puede explicar por la variabilidad en la interacción. Este valor sugiere que la interacción entre dose y supp también contribuye de manera significativa a la variabilidad en la variable respuesta.
+
+Finalmente el coeficiente eta cuadrado parcial (eta.sq.part) de la interacción entre dose y supp es 0.1320279. Esto indica que el 13.20% de la variabilidad única en len se puede atribuir a la interacción entre dose y supp después de considerar otros factores en el modelo.
+
+En resumen, los coeficientes eta cuadrado indican la proporción de variabilidad explicada por cada factor y su interacción en la variable respuesta, mientras que los coeficientes eta cuadrado parcial reflejan la proporción de variabilidad única explicada por cada factor después de considerar otros factores en el modelo. En este caso, dose tiene el mayor efecto en len, seguido por supp y la interacción entre ambos factores.
+
+```{r}
+par(mfrow = c(2,2)) 
+plot(anova_2vias)
+```
+El resumen de los gráficos del modelo muestra al parecer el cumplimiento de los supuestos. Estos son analizados en el sub numeral 4.
+
+Con relación a la pregunta incial, sí existen diferencias estadísticamente significativas respecto de las dosis administradas. Esto se puede deducir de la salida del análisis de varianza de dos vías (ANOVA de dos vías):
+
+El factor dose muestra un efecto significativo en la variable respuesta (len) debido a que el valor de p es extremadamente pequeño (< 2e-16). Esto indica que la dosis tiene un impacto estadísticamente significativo en len.
+El valor de p extremadamente pequeño (< 2e-16) indica que la probabilidad de obtener una diferencia tan grande o mayor entre las medias de las dosis por pura casualidad es extremadamente baja. Por lo tanto, podemos concluir que hay diferencias estadísticamente significativas en la variable respuesta (len) entre las diferentes dosis administradas.
+
+En resumen, el análisis de varianza indica que existe una diferencia estadísticamente significativa en la variable respuesta (len) en función de las dosis administradas.
+
+## 2. Existen diferencias estadísticamente singificativas respecto del tipo de vehículo de administración?
+
+Sí, existen diferencias estadísticamente significativas respecto del tipo de vehículo de administración. Esto se puede deducir de la salida del análisis de varianza de dos vías (ANOVA de dos vías):
+
+El factor supp también tiene un efecto significativo en len con un valor de p de 0.000231. Esto sugiere que el tipo de vehículo de administración tiene un impacto significativo en la variable respuesta.
+El valor de p extremadamente pequeño (0.000231) indica que la probabilidad de obtener una diferencia tan grande o mayor entre las medias de los diferentes tipos de vehículo de administración por pura casualidad es extremadamente baja. Por lo tanto, podemos concluir que hay diferencias estadísticamente significativas en la variable respuesta (len) entre los diferentes tipos de vehículo de administración.
+
+En resumen, el análisis de varianza indica que existe una diferencia estadísticamente significativa en la variable respuesta (len) en función del tipo de vehículo de administración.
+
+## 3. La interacción entre estas variables es significativa?
+
+Sí, la interacción entre las variables dose (dosis administrada) y supp (tipo de vehículo de administración) es significativa. Esto se puede deducir de la salida del análisis de varianza de dos vías (ANOVA de dos vías):
+
+La interacción dose:supp también es significativa con un valor de p de 0.021860. Esto indica que el efecto de la dosis sobre la variable respuesta depende del tipo de vehículo de administración utilizado.
+
+El valor de p (0.021860) por debajo de un umbral de significancia (como 0.05) indica que la probabilidad de obtener una interacción tan grande o mayor entre las dos variables por pura casualidad es baja. Por lo tanto, podemos concluir que hay una interacción estadísticamente significativa entre las variables dose y supp en relación con la variable respuesta (len).
+
+En resumen, el análisis de varianza indica que la interacción entre las variables dose y supp es estadísticamente significativa. Esto implica que el efecto de la dosis sobre la variable respuesta (len) difiere según el tipo de vehículo de administración utilizado.
+
 ## 4. Se satisfacen los supuestos del modelo?
-## 5. Puede realizar una recomendaci´on?
+
+Se implementa la función de cumplimiento de modelos definida con anterioridad
+```{r}
+cumplimientoSupuestos(anova_2vias)
+```
+Se observa que, si se satisfacen los supuestos del modelo, siendo los residuos normales, homocedasticos e independientes.
+
+
+## 5. Puede realizar una recomendación?
+
+Basado en los resultados del análisis de varianza de dos vías, donde se encontraron diferencias estadísticamente significativas tanto para la dosis administrada como para el tipo de vehículo de administración, así como una interacción significativa entre ambas variables, se podria recomendar lo siguiente:
+
+Dado que tanto la dosis administrada como el tipo de vehículo de administración tienen un impacto significativo en la variable respuesta (len), es importante considerar estas variables al tomar decisiones relacionadas con el tratamiento o intervención en el contexto del estudio.
+
+Recomendaría analizar más a fondo las relaciones entre la dosis administrada y el tipo de vehículo de administración en relación con los efectos observados en len. Esto podría implicar realizar análisis adicionales o realizar comparaciones más detalladas entre los diferentes niveles de dosis y los diferentes tipos de vehículo de administración.
+
+Además, dado que se encontró una interacción significativa entre la dosis y el tipo de vehículo de administración, se sugiere investigar la naturaleza de esta interacción y cómo afecta la variable respuesta. Puede ser útil realizar análisis de subgrupos o realizar comparaciones específicas entre los diferentes niveles de dosis dentro de cada tipo de vehículo de administración.
+
+En general, al considerar las diferencias significativas encontradas en el estudio, es importante tener en cuenta tanto la dosis administrada como el tipo de vehículo de administración al diseñar estrategias de tratamiento o intervención y al interpretar los resultados obtenidos.
+
+
