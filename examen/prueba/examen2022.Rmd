@@ -44,7 +44,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -63,7 +63,8 @@ library(leaps)
 library(olsrr)
 library(gamlss)
 library(lsr)
-
+library(ggpubr)
+library(lmtest)
 
 ```
 
@@ -894,4 +895,118 @@ Además, dado que se encontró una interacción significativa entre la dosis y e
 
 En general, al considerar las diferencias significativas encontradas en el estudio, es importante tener en cuenta tanto la dosis administrada como el tipo de vehículo de administración al diseñar estrategias de tratamiento o intervención y al interpretar los resultados obtenidos.
 
+# <span style="color:darkred">Ejercicio 3 </span>
+
+En el archivo morosos.xlsx se encuentran los registros de 10 mil clientes de un banco para los cuales se relevaron
+las siguientes variables:
+• mora: si está en mora con el saldo de su tarjeta de crédito.
+• estudiantes: si es estudiante o no.
+• balance: el saldo al 31/12 próximo pasado.
+• ingreso: ingreso mensual medio del cliente.
+
+```{r}
+morosos<-read_excel("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/examen/prueba/morosos.xlsx")
+morosos
+```
+
+
+Se desea modelar la probabilidad de mora de un cliente en función de las variables disponibles en la base.
+Se pide:
+
+
+# 1. Ajustar un modelo logístico para predecir la probabilidad de incurrir en mora.
+
+```{r}
+
+# Crear una nueva variable binaria para representar 'mora'
+morosos$bin_mora <- ifelse(morosos$mora == "Yes", 1, 0)
+
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico <- glm(bin_mora ~ ingreso, data = morosos, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico)
+
+```
+Intercepto: El valor estimado del intercepto es de -3.094, lo cual indica el logaritmo de la razón de probabilidad de que la variable respuesta sea igual a 1 cuando la variable ingreso es igual a 0. Un valor negativo indica que la probabilidad de que ocurra el evento es menor.
+
+Coeficiente de ingreso: El valor estimado del coeficiente de ingreso es de -8.353e-06. Este coeficiente representa el cambio en el logaritmo de la razón de probabilidad de la variable respuesta por cada unidad de cambio en la variable ingreso. En este caso, un incremento en ingreso se asocia con una disminución en la probabilidad de que ocurra el evento.
+
+Significancia estadística: El coeficiente de ingreso es significativamente diferente de cero con un valor p de 0.0471. Esto indica que existe evidencia estadística para sugerir que la variable ingreso tiene un efecto significativo en la variable respuesta bin_mora.
+
+Deviance residuals: Los residuos de deviance son medidas de ajuste del modelo y cuantifican la discrepancia entre las respuestas observadas y las predichas por el modelo. Los valores oscilan entre -0.2968 y 2.7111, y se espera que estén cerca de cero.
+
+AIC: El valor de AIC (Akaike Information Criterion) del modelo es de 2920.7. El AIC es una medida de la calidad del ajuste del modelo, y un valor más bajo indica un mejor ajuste.
+
+En resumen, el modelo logístico muestra que la variable ingreso tiene un efecto estadísticamente significativo en la probabilidad de que ocurra el evento representado por la variable bin_mora. Sin embargo, se observa que el coeficiente estimado para ingreso es muy pequeño, lo que indica una asociación débil entre la variable predictora y la variable respuesta.
+
+```{r}
+#validación de las demas variables
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico2 <- glm(bin_mora ~ estudiante, data = morosos, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico2)
+```
+Se observa que la variable estudiante es significativa.
+
+```{r}
+#validación de las demas variables
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico3 <- glm(bin_mora ~ balance, data = morosos, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico3)
+```
+La variable balance tambien es significativa.
+
+```{r}
+#validación dcon todas variables
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico4 <- glm(bin_mora ~ ingreso+estudiante+balance, data = morosos, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico4)
+```
+Con todas la variables se observa que se reduce el AIC y la variable ingreso deja de ser signiticativa.
+
+```{r}
+library(lmtest)
+#Prueba de verosimilitud
+lrtest<-lrtest(modelo_logistico, modelo_logistico4)
+lrtest
+```
+El test de razón de verosimilitud sugiere que el modelo 2 (bin_mora ~ ingreso + estudiante + balance) proporciona un ajuste significativamente mejor que el modelo 1 (bin_mora ~ ingreso), lo que implica que la inclusión de las variables estudiante y balance mejora la capacidad de predicción de la variable respuesta bin_mora.
+
+```{r}
+#Validación del AIC
+modelo_logistico$aic
+modelo_logistico2$aic
+modelo_logistico3$aic
+modelo_logistico4$aic
+```
+Por el critero de AIC se observa que el modelo 4 es el que mejor ajusta.
+
+```{r}
+# Validación de un quinto modelo sin la variable ingreso
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico5 <- glm(bin_mora ~ estudiante+balance, data = morosos, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico5)
+```
+```{r}
+lrtest(modelo_logistico4, modelo_logistico5)
+```
+El test de razón de verosimilitud sugiere que no hay evidencia suficiente para concluir que el modelo 2 (bin_mora ~ estudiante + balance) proporciona un ajuste significativamente mejor que el modelo 1 (bin_mora ~ ingreso + estudiante + balance). Por lo tanto, no se justifica eliminar la variable ingreso del modelo.
+
+# 2. Evaluar la calidad de ajuste del modelo con al menos dos criterios distintos.
+
+Para evaluar la calidad de ajuste del modelo logístico, se pueden utilizar varios criterios. A continuación, se presentan dos criterios comunmente utilizados:
+
+Deviance: La deviance es una medida de la discrepancia entre el modelo ajustado y los datos observados. Un valor de deviance más bajo indica un mejor ajuste del modelo. Se puede comparar la deviance del modelo ajustado con la deviance del modelo nulo (modelo sin covariables) para evaluar la mejora en el ajuste. Si la deviance del modelo ajustado es significativamente más baja que la del modelo nulo, indica que el modelo tiene un buen ajuste.
+
+AIC (Akaike Information Criterion): El criterio de información de Akaike es una medida de la calidad del ajuste del modelo que tiene en cuenta la complejidad del modelo. Se calcula utilizando la deviance del modelo y el número de parámetros del modelo. Un valor de AIC más bajo indica un mejor ajuste del modelo. Al comparar diferentes modelos, el modelo con un AIC más bajo se considera preferido.
+# 3. Interpretar los coeficientes del modelo elegido.
+# 4. Evaluar la calidad de clasificación y compararlo con otro método de clasificación.
 
