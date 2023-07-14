@@ -52,7 +52,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("carData","dplyr")
+packages_needed <- c("carData","dplyr","lsr")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -60,6 +60,7 @@ check_packages(packages_needed)
 
 library(carData)
 library(dplyr)
+library(lsr)
 
 
 ```
@@ -177,6 +178,35 @@ grosor)) + geom_boxplot() +
 theme_bw()+scale_fill_brewer(palette="Dark2")
 p3
 grid.arrange(p1, p2, ncol = 2)
+```
+
+```{r}
+with(data = datos,expr = tapply(resistencia, templado, mean))
+with(data = datos,expr = tapply(resistencia, templado, sd))
+with(data = datos,expr = tapply(resistencia, grosor, mean))
+with(data = datos,expr = tapply(resistencia, grosor, sd))
+with(data = datos,expr = tapply(resistencia, list(templado,grosor), mean))
+with(data = datos,expr = tapply(resistencia, list(templado,grosor), sd))
+```
+**Gráficos de Interacción**
+
+```{r}
+ggplot(data = datos, aes(x = templado, y = resistencia, colour = grosor,
+group = grosor)) +
+stat_summary(fun = mean, geom = "point") +
+stat_summary(fun = mean, geom = "line") +
+labs(y = 'mean (resistencia)') + theme_bw()
+```
+
+**Estimamos los coeficientes del Modelo**
+```{r}
+anova = aov(resistencia ~ templado * grosor, data = datos)
+summary(anova)
+```
+
+```{r}
+library(lsr)
+etaSquared(anova)
 ```
 
 
