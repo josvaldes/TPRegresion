@@ -232,7 +232,7 @@ Se confirma la observación No. 64 es un punto influyent y outlier. La Observaci
 El modelo no es adecuado porque no cumple los supuestos, aunque el R cuadro explica un 69,21 % de la variable respuesta no cumplen los supuestos de normalidad, varianza constante e independencia. Se debe validar una transformación.
 
 
-## 3. Realizar una transformaci´on de la variable respuesta para lograr normalidad en la distribuci´on de los residuos. Indicar si el modelo con esta transformaci´on resulta adecuado.
+## 3. Realizar una transformación de la variable respuesta para lograr normalidad en la distribución de los residuos. Indicar si el modelo con esta transformación resulta adecuado.
 
 ```{r}
 library(MASS)
@@ -334,35 +334,68 @@ Se cumple el supuesto de homocedastisidad de los residuos.
 ```{r}
 dwtest(model5eje1)
 ```
-Se cumple independencia.
+No se cumple independencia.
 
-El modelo 5 cumple los supuestos y se podria utilizar para explicar la variable precio en funcion de tamanio.
+El modelo 5 no cumple los supuestos.
 
-
+Función de cumplimientos de supuestos
 ```{r}
 #Funcion de cumplimientos de supuestos
-Respuesta=0
+Respuesta <- matrix(0, nrow = 8, ncol = 1)
+
 cumplimientoSupuestos <- function(modeloLineal) {
   #Supuesto de normalidad
   Normalidad=shapiro.test(modeloLineal$residuals)
     if (Normalidad$p.value>0.05){
-      Respuesta[1]="Normal"
+      Respuesta[1,1]="Los residuos del modelo son normales basado en el test de Shapiro"
+      
+      p_value <- Normalidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia (0.05), no se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo siguen una distribución normal.")
+      Respuesta[2,1] <- texto
+      
+      
     } else {
-      Respuesta[1]="No es normal"
+      
+      Respuesta[1,1]="Los residuos del modelo no son normales basado en el test de Shapiro"
+      
+      p_value <- Normalidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo no siguen una distribución normal.")
+      Respuesta[2,1] <- texto
+      
+      
     }
+  
+  Respuesta[3,1]="----------------------------------------------------------------------------------------------------"
+  
   #Supuesto de homocedastisidad
   homocedastisidad=bptest(modeloLineal)
-    if (Normalidad$p.value>0.05){
-      Respuesta[2]="homocedastico"
+    if (homocedastisidad$p.value>0.05){
+      Respuesta[4,1]="Los errores del modelo son homocedastico basado en el test de Breusch-Pagan"
+      p_value <- homocedastisidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia establecido (0.05), no se tiene suficiente evidencia para rechazar la hipótesis nula de homocedasticidad. Por lo tanto, se puede considerar que los errores del modelo tienen varianzas constantes (homocedasticidad).")
+      Respuesta[5,1] <- texto
+      
+      
     }else {
-      Respuesta[2]="No es homocedastico"
+      Respuesta[4,1]="Los errores del modelo no son homocedastico basado en el test de Breusch-Pagan"
+      p_value <- homocedastisidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de homocedasticidad. Por lo tanto, se puede considerar que los errores del modelo no tienen varianzas constantes (heterosedasticos).")
+      Respuesta[5,1] <- texto
     }
+  
+   Respuesta[6,1]="----------------------------------------------------------------------------------------------------"
   #Supuesto de independencia
   independencia=dwtest(modeloLineal)
-    if (Normalidad$p.value>0.05){
-      Respuesta[3]="independiente"
+    if (independencia$p.value>0.05){
+      Respuesta[7,1]="Los errores del modelo son independientes basado en el test de Durbin-Watson"
+      p_value <- independencia$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para no rechazar la hipótesis nula de independencia de los errores. Por lo tanto, se puede concluir que no existe autocorrelación en los errores del modelo.")
+      Respuesta[8,1] <- texto
     }else {
-      Respuesta[3]="No es independiente"
+      Respuesta[7,1]="Los errores del modelo no son independientes basado en el test de Durbin-Watson"
+      p_value <- independencia$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de independencia de los errores. Por lo tanto, se puede concluir que existe autocorrelación en los errores del modelo.")
+      Respuesta[8,1] <- texto
     }
   
   return(Respuesta)
@@ -381,16 +414,150 @@ cumplimientoSupuestos(model5eje1)
 ```{r}
 cumplimientoSupuestos(model4eje1)
 ```
+
 ```{r}
 cumplimientoSupuestos(model3eje1)
 ```
 ```{r}
 cumplimientoSupuestos(model2eje1)
 ```
+
+
 ```{r}
 cumplimientoSupuestos(modeleje1)
 ```
-función para encontrar la mejor transformación box y cox
+
+función resumen de cumplimientos de los modelos
+
+```{r}
+resumenCumplimiento <- function(cantidadModelos, ...) {
+  modelos <- list(...)
+  resultado <- matrix(0, nrow = cantidadModelos + 1, ncol = 5)
+  
+  # Nombre de la columna
+  resultado[1, 1] <- "Modelos"
+  
+  # Obtener los nombres de los modelos como texto
+  modelos_texto <- as.character(substitute(list(...)))[-1]
+  
+  for (i in 1:cantidadModelos) {
+    # Asignar el nombre del modelo a la matriz resultado
+    resultado[i + 1, 1] <- modelos_texto[i]
+    
+    # Nombre de la columna
+    resultado[1, 2] <- "Normalidad"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 2] <- cumplimientoSupuestos(modelos[[i]])[1, 1]
+    
+    #Reducción del texto
+    if(resultado[i + 1, 2]=="Los residuos del modelo son normales basado en el test de Shapiro"){
+      resultado[i + 1, 2] <- "Hay normalidad"
+    }else{
+      resultado[i + 1, 2] <- "No hay normalidad"
+    }
+    
+    # Nombre de la columna 3
+    resultado[1, 3] <- "Homocedasticidad"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 3] <- cumplimientoSupuestos(modelos[[i]])[4, 1]
+    resultado[i + 1, 3]
+    #Reducción del texto
+    if(resultado[i + 1, 3]=="Los errores del modelo son homocedastico basado en el test de Breusch-Pagan"){
+      resultado[i + 1, 3] <- "Hay homocedasticidad"
+    }else{
+      resultado[i + 1, 3] <- "No hay homocedasticidad"
+    }
+    
+    
+    # Nombre de la columna 4
+    resultado[1, 4] <- "Independencia"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 4] <- cumplimientoSupuestos(modelos[[i]])[7, 1]
+    resultado[i + 1, 4]
+    #Reducción del texto
+    if(resultado[i + 1, 4]=="Los errores del modelo son independientes basado en el test de Durbin-Watson"){
+      resultado[i + 1, 4] <- "Hay independencia"
+    }else{
+      resultado[i + 1, 4] <- "No hay independencia"
+    }
+    
+    # Nombre de la columna
+    resultado[1, 5] <- "Cumplimiento"
+    
+    if (resultado[i + 1, 2] == "Hay normalidad" & resultado[i + 1, 3]=="Hay homocedasticidad" & resultado[i + 1, 4]=="Hay independencia") {
+      resultado[i + 1, 5] <- "Si"
+    } else {
+      resultado[i + 1, 5] <- "No"
+    }
+  }
+  
+  return(resultado)
+
+}
+```
+
+
+
+```{r}
+resumenCumplimiento(5,modeleje1,model2eje1,model3eje1,model4eje1,model5eje1)
+```
+
+Ninguno de los modelos cumplen los supuestos.
+
+```{r}
+box_cox_result2 <- boxcox(precio ~ log10(tamanio), lambda = -2:2, data = preciocasas)
+```
+
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox2 <- box_cox_result2$x[which.max(box_cox_result$y)]
+
+# Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente "tamanio".
+model2Box2eje1 <- lm((precio)^(best_box_cox2) ~ tamanio, data = preciocasas)
+
+summary(model2Box2eje1)
+```
+
+```{r}
+cumplimientoSupuestos(model2Box2eje1)
+```
+
+```{r}
+model2Box22eje1 <- lm(log10(precio) ~ tamanio, data = preciocasas)
+
+summary(model2Box22eje1)
+```
+```{r}
+cumplimientoSupuestos(model2Box22eje1)
+```
+
+
+```{r}
+box_cox_result3 <- boxcox(log10(precio) ~ log10(tamanio), lambda = -2:10, data = preciocasas)
+```
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox3 <- box_cox_result3$x[which.max(box_cox_result$y)]
+
+# Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente "tamanio".
+model2Box3eje1 <- lm((precio)^(best_box_cox3) ~ tamanio, data = preciocasas)
+
+summary(model2Box3eje1)
+```
+```{r}
+cumplimientoSupuestos(model2Box3eje1)
+```
+De la revision se puede considerar que se debe utilizar un modelo robusto, esto debido a que no se logra normalizar los datos con las transformación box y cox. a continuación se presenta un resumen de los modelos utilizados:
+
+```{r}
+resumenCumplimiento(8,modeleje1,model2eje1,model3eje1,model4eje1,model5eje1,model2Box3eje1,model2Box2eje1,model2Box22eje1)
+```
+
+
+función para encontrar la mejor transformación box y cox (pendiente validar)
 
 ```{r}
 mejorBoxYCox<- function(independiente, dependiente,datos){
@@ -399,12 +566,12 @@ mejorBoxYCox<- function(independiente, dependiente,datos){
   # Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
   best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
 
-  # Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a    la     potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable       independiente "tamanio".
+  # Se ajusta un modelo de regresión lineal utilizando la variable dependiente elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente si es distinta de cero, si es cero se realiza el logaritmo en base de 10 de la variable independiente.
   if (best_box_cox==0){
-    model <- lm((independiente)^(best_box_cox) ~ dependiente, data = datos)
+    model <- lm(log10(independiente) ~ dependiente, data = datos)
     
   } else {
-    model <- lm(log10(independiente) ~ dependiente, data = datos)
+    model <- lm((independiente)^(best_box_cox) ~ dependiente, data = datos)
   }
   
   
@@ -430,7 +597,7 @@ summary(modeleje1p4)
 ```{r}
 cumplimientoSupuestos(modeleje1p4)
 ```
-Se observa que al retirar la observacion 64 el modelo lineal sensillo cumple los supuesto, ademas el r cuadro mejora a un 75.6%.
+Se observa que al retirar la observacion 64 el modelo lineal sensillo se sigue sin cumplir los supuesto, por otro lado, el r cuadro mejora a un 75.6%.
 
 
 ```{r}
@@ -555,6 +722,7 @@ promedio_errores_absolutos_Mejor_ML <- mean(abs(residuos2))
 promedio_errores_absolutos_Mejor_ML
 ```
 Se observa un mayor error promedio de los errores en el modelo robusto que en el lineal.
+
 
 
 ## 6. Utilizar un método de selección de variables para proponer un modelo multivariado. Analizar el cumplimiento de los supuestos.
