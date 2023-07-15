@@ -694,32 +694,76 @@ ajusterobP5 <- lmrob(precio ~ ., data = preciocasas)
 summary(ajusterobP5)
 ```
 
-
+Mejor modelo lineal basado en los errores
 ```{r}
-#promedio de los errores absolutos del modelo robusto
-# Acceder al resumen del modelo
-resumen_modelo <- summary(ajusterobP5)
-
-# Obtener los residuos del modelo
-residuos <- resumen_modelo$residuals
-
-# Calcular el promedio de los errores absolutos
-promedio_errores_absolutos <- mean(abs(residuos))
-
-promedio_errores_absolutos
+#Promedios errores absolutos del modelo 1
+m1<-summary(modeleje1)
+print(paste("Modelo 1, errores: ", mean(abs(m1$residuals))))
+#Promedios errores absolutos del modelo 2
+m2<-summary(model2eje1)
+print(paste("Modelo 2, errores: ", mean(abs(m2$residuals))))
+#Promedios errores absolutos del modelo 3
+m3<-summary(model3eje1)
+print(paste("Modelo 3, errores: ", mean(abs(m3$residuals))))
+#Promedios errores absolutos del modelo 4
+m4<-summary(model4eje1)
+print(paste("Modelo 4, errores: ", mean(abs(m4$residuals))))
+#Promedios errores absolutos del modelo 5
+m5<-summary(model5eje1)
+print(paste("Modelo 5, errores: ", mean(abs(m5$residuals))))
+#Promedios errores absolutos del modelo 6
+m6<-summary(model2Box3eje1)
+print(paste("Modelo 6, errores: ", mean(abs(m6$residuals))))
+#Promedios errores absolutos del modelo 7
+m7<-summary(model2Box2eje1)
+print(paste("Modelo 7, errores: ", mean(abs(m7$residuals))))
+#Promedios errores absolutos del modelo 8
+m8<-summary(model2Box22eje1)
+print(paste("Modelo 8, errores: ", mean(abs(m8$residuals))))
+#resumenCumplimiento(8,modeleje1,model2eje1,model3eje1,model4eje1,model5eje1,model2Box3eje1,model2Box2eje1,model2Box22eje1)
 ```
+Función para obtener el error absoluto promedio de un modelo 
 ```{r}
-#promedio de los errores absolutos del mejor modelo lineal (model5eje1) #este fue tranformado para el cumplimiento de los supuestos
-# Acceder al resumen del modelo
-resumen_modelo2 <- summary(model5eje1)
+# Función para obtener el error absoluto promedio de un modelo
+get_mean_absolute_error <- function(model) {
+  #return(mean(abs(model$residuals)))
+  residuals <- as.numeric(model$residuals)
+  return(mean(abs(residuals)))
+}
+```
 
-# Obtener los residuos del modelo
-residuos2 <- resumen_modelo2$residuals
+Conseguir el modelo con menor error absoluto medio
 
-# Calcular el promedio de los errores absolutos
-promedio_errores_absolutos_Mejor_ML <- mean(abs(residuos2))
+```{r}
+# Crear un vector con los nombres de los modelos
+model_names <- c("modeleje1", "model2eje1", "model3eje1", "model4eje1", "model5eje1", "model2Box3eje1", "model2Box2eje1", "model2Box22eje1")
 
-promedio_errores_absolutos_Mejor_ML
+errorModelos<-list(modeleje1,model2eje1,model3eje1,model4eje1,model5eje1,model2Box3eje1,model2Box2eje1,model2Box22eje1)
+
+# Calcular los valores de error absoluto promedio para cada modelo en la lista errorModelos
+mean_absolute_error_values <- sapply(errorModelos, get_mean_absolute_error)
+
+# Obtener el índice del modelo con el menor valor de error absoluto promedio
+min_index <- which.min(mean_absolute_error_values)
+
+# Obtener el nombre del modelo con el menor valor de error absoluto promedio
+best_model_name <- model_names[min_index]
+
+# Obtener el valor del error absoluto promedio del mejor modelo
+best_error <- mean_absolute_error_values[min_index]
+
+# Imprimir el nombre del modelo y el valor del error absoluto promedio
+cat("El modelo con el menor error absoluto promedio es", best_model_name, "con un error de", best_error, "\n")
+
+# Imprimir el modelo con el menor valor de error absoluto promedio
+cat("El modelo seria: \n")
+print(errorModelos[min_index])
+```
+
+El modelo con menor error es el modelo 3 con un error 0.113185750482932 y almacenado en la variable model3eje1.
+
+```{r}
+get_mean_absolute_error(ajusterobP5)
 ```
 Se observa un mayor error promedio de los errores en el modelo robusto que en el lineal.
 
@@ -814,11 +858,11 @@ modeleje1P6= lm(precio ~ tamanio+caso+impuestos+estrena, data = preciocasas )
 summary(modeleje1P6)
 ```
 ```{r}
-#modelo lineal simple con la seleccion de las mejores variables
+#modelo lineal simple con la selección de las mejores variables
 cumplimientoSupuestos(modeleje1P6)
 ```
 ```{r}
-#modelo lineal simple transformado con la seleccion de las mejores variables
+#modelo lineal simple transformado con la selección de las mejores variables
 model2eje1P6= lm(log10(precio) ~ log10(tamanio+caso+impuestos+estrena), data = preciocasas )
 summary(model2eje1P6)
 ```
@@ -826,15 +870,124 @@ summary(model2eje1P6)
 cumplimientoSupuestos(model2eje1P6)
 ```
 ```{r}
+box_cox_resultP6 <- boxcox(precio ~ tamanio+caso+impuestos+estrena, lambda = -2:2, data = preciocasas)
+```
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_coxP6 <- box_cox_result$x[which.max(box_cox_result$y)]
+best_box_coxP6
+```
+```{r}
+model2eje6P1 <- lm((precio)^(best_box_coxP6) ~ tamanio+caso+impuestos+estrena, data = preciocasas)
+
+summary(model2eje6P1)
+```
+```{r}
+cumplimientoSupuestos(model2eje6P1)
+```
+
+```{r}
+model3eje6P1 <- lm((precio) ~ I((tamanio+caso+impuestos+estrena)^(best_box_coxP6)), data = preciocasas)
+
+summary(model3eje6P1)
+```
+```{r}
+cumplimientoSupuestos(model3eje6P1)
+```
+Se intenta con las variables de la selección de variables No. 43= impuestos dormitorios estrena tamanio
+
+```{r}
+model2eje1P6= lm(precio ~ impuestos+dormitorios+estrena+tamanio, data = preciocasas )
+summary(model2eje1P6)
+```
+Se retira la variable dormitorios por no ser significativa
+```{r}
+model2eje1P6= lm(precio ~ impuestos+estrena+tamanio, data = preciocasas )
+summary(model2eje1P6)
+```
+```{r}
+cumplimientoSupuestos(model2eje1P6)
+```
+```{r}
+box_cox_result2P6 <- boxcox(precio ~ impuestos + estrena + tamanio, lambda = -2:2, data = preciocasas)
+```
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox2P6 <- box_cox_result2P6$x[which.max(box_cox_result$y)]
+best_box_cox2P6
+```
+
+```{r}
+model4eje6P1 <- lm((precio) ~ I((impuestos + estrena + tamanio)^(best_box_cox2P6)), data = preciocasas)
+
+summary(model4eje6P1)
+```
+```{r}
+cumplimientoSupuestos(model4eje6P1)
+```
+Ninguno de los modelos lineales con selección de variables cumplen los supuestos. Se comparte resumen de los modelos utilizados:
+```{r}
+resumenCumplimiento(6,modeleje1P6, model2eje1P6, model2eje6P1, model3eje6P1, model2eje1P6, model4eje6P1)
+```
+
+
+```{r}
 #modelo lineal robusto con la seleccion de las mejores variables
 ajusterobP6 <- lmrob(precio ~ tamanio+caso+impuestos+estrena, data = preciocasas)
 summary(ajusterobP6)
 ```
 
+
 ```{r}
-cumplimientoSupuestos(ajusterobP6)
+get_mean_absolute_error(ajusterobP6)
 ```
-Se observa el cumplimiento de los supuestos sobre el modelo con transformación, en tal sentido, el mejor modelo que explica la variabilidad del precio en función del tamaño es model2eje1P6, un modelo lineal simple con transformación, con un R cuadrado de 75.29%.
+```{r}
+evaluarErrores_modelos <- function(modelos) {
+  # Crear un vector con los nombres de los modelos
+  model_names <- names(modelos)
+  
+  # Calcular los valores de error absoluto promedio para cada modelo en la lista de modelos
+  mean_absolute_error_values <- sapply(modelos, get_mean_absolute_error)
+  
+  # Obtener el índice del modelo con el menor valor de error absoluto promedio
+  min_index <- which.min(mean_absolute_error_values)
+  
+  if (min_index > 0) {
+    # Obtener el nombre del modelo con el menor valor de error absoluto promedio
+    best_model_name <- model_names[min_index]
+    
+    # Obtener el valor del error absoluto promedio del mejor modelo
+    best_error <- mean_absolute_error_values[min_index]
+    
+    # Imprimir el nombre del modelo y el valor del error absoluto promedio
+    cat("El modelo con el menor error absoluto promedio es", best_model_name, "con un error de", best_error, "\n")
+    
+    # Imprimir el modelo con el menor valor de error absoluto promedio
+    cat("El modelo sería:\n")
+    print(modelos[[min_index]])
+  } else {
+    cat("No se pudo determinar el mejor modelo debido a un error en los nombres de los modelos.\n")
+  }
+}
+
+
+```
+
+```{r}
+# Ejemplo de uso:
+modelosP6 <- list(
+  modeleje1P6 = modeleje1P6, 
+  model2eje1P6 = model2eje1P6,
+  model2eje6P1 = model2eje6P1,
+  model3eje6P1 = model3eje6P1,
+  model2eje1P6 = model2eje1P6,
+  model4eje6P1 = model4eje6P1)
+
+evaluarErrores_modelos(modelosP6)
+
+```
+Se observa que el mejor modelo lineal tiene un error absoluto promedio de 2.334749 a diferencia del modelo robusto con 32908.53. Como ninguno de los modelos presenta una representación de los datos si se sugiere usar GAMLSS, poruqe puede existir variables no linales que afectan los modelos utilizados hasta ahora.
+
 
 
 ## 7. Le parece adecuado un modelo GAMLSS en este caso? Justifique.
@@ -867,10 +1020,6 @@ plot(mod_GAMLSS)
 ```
 
 
-```{r}
-cumplimientoSupuestos(mod_GAMLSS)
-```
-
 
 ```{r}
 # Efecto individuales de los Predictores (GAMLSS)
@@ -894,9 +1043,6 @@ summary(mod_GAMLSS2)
 plot(mod_GAMLSS2)
 ```
 
-```{r}
-cumplimientoSupuestos(mod_GAMLSS2) #creo que esta funcion solo serviria para modelos lineales simple, pendiente de validar
-```
 
 
 ```{r}
