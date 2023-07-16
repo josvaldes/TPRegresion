@@ -1356,6 +1356,44 @@ Este coeficiente indica cómo cambia la log-odds del evento de interés por cada
 
 Es importante tener en cuenta que los coeficientes están en la escala logarítmica debido a la naturaleza del modelo logístico. Para interpretar los efectos en términos de probabilidades, se pueden aplicar transformaciones, como la exponenciación de los coeficientes para obtener odds ratios o la aplicación de la función de enlace inversa (por ejemplo, la función logística) para obtener probabilidades directamente.
 
+
+# 3. Interpretar los coeficientes del modelo elegido.
+
+```{r}
+# Extraer los coeficientes del modelo logístico y asignarlos a variables individuales
+intercepto <- modelo_logistico4$coefficients["(Intercept)"]
+coef_ingreso <- modelo_logistico4$coefficients["ingreso"]
+coef_estudiante <- modelo_logistico4$coefficients["estudianteYes"]
+coef_balance <- modelo_logistico4$coefficients["balance"]
+
+# Conversion razon odd (relación de probabilidades)
+oddIntercepto=exp(intercepto)
+oddIngreso=exp(coef_ingreso)
+oddEstudiante=exp(coef_estudiante)
+oddBalance=exp(coef_balance)
+
+# probabilidad
+
+probabilidad_oddIntercepto=(oddIntercepto/(1+oddIntercepto))*100
+probabilidad_oddIngreso=(oddIngreso/(1+oddIngreso))*100
+probabilidad_oddEstudiante=(oddEstudiante/(1+oddEstudiante))*100
+probabilidad_oddBalance=(oddBalance/(1+oddBalance))*100
+
+print(paste("El coefiente transformado del intercepto es: ",oddIntercepto, ", la probabilidad de éxito del evento seria ", probabilidad_oddIntercepto))
+print(paste("El coefiente transformado de la variable Ingreso es: ",oddIngreso,", la probabilidad de éxito del evento seria ",probabilidad_oddIngreso))
+print(paste("El coefiente transformado de la variable Estudiante es: ",oddEstudiante,", la probabilidad de éxito del evento seria ",probabilidad_oddEstudiante))
+print(paste("El coefiente transformado de la variable Balance es: ",oddBalance,", la probabilidad de éxito del evento seria ",probabilidad_oddBalance))
+
+```
+
+oddIntercepto: El coeficiente del intercepto (Intercept) transformado en odds es aproximadamente 1.903854e-05. Esto implica que las odds de éxito (evento de interés) son de aproximadamente 1.903854e-05. La probabilidad de éxito correspondiente es del 0.00190381778463621, lo que indica que la probabilidad de éxito es muy baja cuando todas las demás variables predictoras son cero.
+
+oddIngreso: El coeficiente ingreso transformado en odds es aproximadamente 1.000003. Esto indica que un aumento unitario en la variable ingreso resulta en un cambio muy pequeño en las odds de éxito. La probabilidad de éxito correspondiente es del 50.0000758362531%, lo que sugiere que hay una probabilidad del 50% de éxito.
+
+oddEstudiante: El coeficiente estudianteYes transformado en odds es aproximadamente 0.5237317. Esto implica que, en comparación con los individuos que no son estudiantes, los estudiantes tienen odds de éxito aproximadamente 0.5237317 veces más bajas. La probabilidad de éxito correspondiente es del 34.32%, lo que sugiere una probabilidad de éxito del 34.32% en comparación con no ser estudiante.
+
+oddBalance: El coeficiente balance transformado en odds es aproximadamente 1.005753. Esto indica que un aumento unitario en la variable balance resulta en un cambio muy pequeño en las odds de éxito. La probabilidad de éxito correspondiente es del 50.1434122381219%, lo que sugiere una probabilidad de éxito del 50.14%.
+
 # 4. Evaluar la calidad de clasificación y compararlo con otro método de clasificación.
 
 
@@ -1444,9 +1482,9 @@ legend("bottomright",legend=paste(" AUC =",round(auc,4)))
 
 funcion curva ROC
 ```{r}
-curvaROC <- function(muestra,porcentaje,dataset,x,modelo){
+curvaROC <- function(muestra,No.muestra,dataset,x,modelo){
  #muestra: numero de muestra de la población
- #porcentaje: Porcentaje de datos de la muestra para el test
+ #No.muestra: No. de datos de la muestra
  #dataset: Conjunto de datos utilizado
  #x: Variable predictora
  #modelo: Modelo utilizado para hacer el ajuste.
@@ -1454,7 +1492,7 @@ curvaROC <- function(muestra,porcentaje,dataset,x,modelo){
   set.seed(20231)
   
 
-  entrenamiento<-sample(1:muestra,porcentaje)
+  entrenamiento<-sample(1:muestra,No.muestra)
 
   validacion<-c(1:muestra)[-entrenamiento]
   
@@ -1499,11 +1537,11 @@ curvaROC <- function(muestra,porcentaje,dataset,x,modelo){
 
 ```{r}
 mora=morosos$mora
-curvaROC(500,90,morosos,mora,modelo_logistico)
-curvaROC(500,90,morosos,mora,modelo_logistico2)
-curvaROC(500,90,morosos,mora,modelo_logistico3)
-curvaROC(500,90,morosos,mora,modelo_logistico4)
-curvaROC(500,90,morosos,mora,modelo_logistico5)
+curvaROC(500,400,morosos,mora,modelo_logistico)
+curvaROC(500,400,morosos,mora,modelo_logistico2)
+curvaROC(500,400,morosos,mora,modelo_logistico3)
+curvaROC(500,400,morosos,mora,modelo_logistico4)
+curvaROC(500,400,morosos,mora,modelo_logistico5)
 ```
 
 Precision : TP / (TP+FP)
@@ -1530,13 +1568,43 @@ FN<-length(actual_values[(actual_values==1)&(pred==0)])#2
 precision<-TP/(TP+FP)
 precision
 ```
+La precisión es una medida de la exactitud del modelo en la clasificación de las muestras positivas. Se calcula como el cociente entre los verdaderos positivos (TP) y la suma de los verdaderos positivos y los falsos positivos (FP).
+
+El valor obtenido de la precisión es 1, lo que indica una precisión perfecta. Esto significa que todas las muestras clasificadas como positivas por el modelo son realmente positivas, sin ningún falso positivo.
+
 ```{r}
 recall<-TP/(TP+FN)
 recall
 ```
 
+El recall, también conocido como exhaustividad o sensibilidad, es una medida de qué tan bien el modelo identifica las muestras positivas. Se calcula como el cociente entre los verdaderos positivos (TP) y la suma de los verdaderos positivos y los falsos negativos (FN).
+
+El valor del recall es 0.3846154, lo que indica que el modelo identifica correctamente aproximadamente el 38.46% de todas las muestras positivas. Esto significa que hay una proporción de muestras positivas que no son detectadas por el modelo y se clasifican erróneamente como negativas (falsos negativos).
+
 ```{r}
 f1_score<-(2*precision*recall)/(precision+recall) 
 f1_score
 ```
+El F1-score es una medida que combina la precisión y el recall en una sola métrica, proporcionando una evaluación más completa del rendimiento del modelo en la clasificación.
 
+El valor del F1-score es 0.5555556, lo que indica un equilibrio entre la precisión y el recall. Un F1-score de 1 representa un rendimiento óptimo, mientras que un valor cercano a 0 indica un rendimiento pobre.
+
+Un F1-score de 0.5555556 sugiere un rendimiento razonablemente equilibrado entre la precisión y el recall en la clasificación de las muestras positivas. 
+
+Conclusión
+El modelo que se está evaluando tiene una precisión perfecta de 1, lo que significa que todas las muestras clasificadas como positivas son realmente positivas, sin ningún falso positivo. Sin embargo, el recall es de 0.3846154, lo que indica que solo se están identificando correctamente alrededor del 38.46% de todas las muestras positivas. Esto significa que hay un número significativo de falsos negativos, es decir, muestras positivas que no se están detectando.
+
+El F1-score, que combina tanto la precisión como el recall en una sola métrica, es de 0.5555556. Esto indica un equilibrio razonable entre la precisión y el recall, pero aún hay margen de mejora en el rendimiento del modelo.
+
+En general, un modelo con una precisión perfecta y un recall bajo puede indicar que el modelo está clasificando correctamente los casos positivos, pero también está perdiendo una cantidad considerable de casos positivos que no se están detectando. Es posible que el modelo esté siendo demasiado conservador en su clasificación y está evitando falsos positivos, pero a costa de perder verdaderos positivos.
+
+
+Estimación del error
+```{r}
+pred_test_RegLog_0_1<-ifelse(predict_value>0.5,1,0)#idem pred
+error_RegLog<- mean(bin_mora_test!= pred_test_RegLog_0_1) * 100
+error_RegLog
+```
+El valor del error_RegLog es 1.860465, lo que indica que el modelo de regresión logística tiene una tasa de error de clasificación del 1.860465%. Esto significa que aproximadamente el 1.860465% de las muestras en el conjunto de prueba se clasifican incorrectamente por el modelo.
+
+La tasa de error de clasificación es una medida comúnmente utilizada para evaluar el rendimiento de los modelos de clasificación. Un valor bajo de error indica un mejor rendimiento del modelo, mientras que un valor alto indica un rendimiento deficiente. En este caso, un error del 1.860465% sugiere un rendimiento generalmente bueno del modelo de regresión logística.
