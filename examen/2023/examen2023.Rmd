@@ -1,0 +1,471 @@
+---
+title: "Examen año 2023"
+author: "Jose Valdes"
+date: "2023-07-18"
+output:
+  word_document:
+    toc: yes
+    toc_depth: '5'
+  pdf_document:
+    toc: yes
+    toc_depth: '5'
+  html_document:
+    toc: yes
+    code_folding: show
+    toc_float: yes
+    df_print: paged
+    theme: united
+    code_download: yes
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+```{r}
+#limpio la memoria
+rm( list= ls(all.names= TRUE) )  #remove all objects
+gc( full= TRUE )                 #garbage collection
+```
+Se realiza validación de la instalación de los paquetes necesarios para ejecutar el script
+
+```{r}
+# Bibliotecas a cargar
+
+check_packages <- function(packages) {
+  if (all(packages %in% rownames(installed.packages()))) {
+    TRUE
+  } else{
+    cat(
+      "Instalar los siguientes packages antes de ejecutar el presente script\n",
+      packages[!(packages %in% rownames(installed.packages()))],
+      "\n"
+    )
+  }
+}
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest","ResourceSelection","vcd","pROC","ROCR","randomForest")
+
+# Se llama a la funcion check_packages
+check_packages(packages_needed)
+
+
+library(readxl)
+library(ggplot2)
+library(MVN)
+library(gridExtra)
+library(aod)
+library(MASS)
+library(carData)
+library(car)
+library(robustbase)
+library(leaps)
+library(olsrr)
+library(gamlss)
+library(lsr)
+library(ggpubr)
+library(lmtest)
+library(ResourceSelection)
+library(vcd) 
+library(pROC)
+library(ROCR)
+library(randomForest)
+
+```
+
+Funciones:
+
+Función de cumplimientos de supuestos
+```{r}
+#Funcion de cumplimientos de supuestos
+Respuesta <- matrix(0, nrow = 8, ncol = 1)
+
+cumplimientoSupuestos <- function(modeloLineal) {
+  #Supuesto de normalidad
+  Normalidad=shapiro.test(modeloLineal$residuals)
+    if (Normalidad$p.value>0.05){
+      Respuesta[1,1]="Los residuos del modelo son normales basado en el test de Shapiro"
+      
+      p_value <- Normalidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia (0.05), no se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo siguen una distribución normal.")
+      Respuesta[2,1] <- texto
+      
+      
+    } else {
+      
+      Respuesta[1,1]="Los residuos del modelo no son normales basado en el test de Shapiro"
+      
+      p_value <- Normalidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo no siguen una distribución normal.")
+      Respuesta[2,1] <- texto
+      
+      
+    }
+  
+  Respuesta[3,1]="----------------------------------------------------------------------------------------------------"
+  
+  #Supuesto de homocedastisidad
+  homocedastisidad=bptest(modeloLineal)
+    if (homocedastisidad$p.value>0.05){
+      Respuesta[4,1]="Los errores del modelo son homocedastico basado en el test de Breusch-Pagan"
+      p_value <- homocedastisidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia establecido (0.05), no se tiene suficiente evidencia para rechazar la hipótesis nula de homocedasticidad. Por lo tanto, se puede considerar que los errores del modelo tienen varianzas constantes (homocedasticidad).")
+      Respuesta[5,1] <- texto
+      
+      
+    }else {
+      Respuesta[4,1]="Los errores del modelo no son homocedastico basado en el test de Breusch-Pagan"
+      p_value <- homocedastisidad$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de homocedasticidad. Por lo tanto, se puede considerar que los errores del modelo no tienen varianzas constantes (heterosedasticos).")
+      Respuesta[5,1] <- texto
+    }
+  
+   Respuesta[6,1]="----------------------------------------------------------------------------------------------------"
+  #Supuesto de independencia
+  independencia=dwtest(modeloLineal)
+    if (independencia$p.value>0.05){
+      Respuesta[7,1]="Los errores del modelo son independientes basado en el test de Durbin-Watson"
+      p_value <- independencia$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para no rechazar la hipótesis nula de independencia de los errores. Por lo tanto, se puede concluir que no existe autocorrelación en los errores del modelo.")
+      Respuesta[8,1] <- texto
+    }else {
+      Respuesta[7,1]="Los errores del modelo no son independientes basado en el test de Durbin-Watson"
+      p_value <- independencia$p.value
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia establecido (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de independencia de los errores. Por lo tanto, se puede concluir que existe autocorrelación en los errores del modelo.")
+      Respuesta[8,1] <- texto
+    }
+  
+  return(Respuesta)
+  
+}
+
+#cumplimientoSupuestos(model5eje1)
+```
+
+función resumen de cumplimientos de los modelos
+
+```{r}
+resumenCumplimiento <- function(cantidadModelos, ...) {
+  modelos <- list(...)
+  resultado <- matrix(0, nrow = cantidadModelos + 1, ncol = 5)
+  
+  # Nombre de la columna
+  resultado[1, 1] <- "Modelos"
+  
+  # Obtener los nombres de los modelos como texto
+  modelos_texto <- as.character(substitute(list(...)))[-1]
+  
+  for (i in 1:cantidadModelos) {
+    # Asignar el nombre del modelo a la matriz resultado
+    resultado[i + 1, 1] <- modelos_texto[i]
+    
+    # Nombre de la columna
+    resultado[1, 2] <- "Normalidad"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 2] <- cumplimientoSupuestos(modelos[[i]])[1, 1]
+    
+    #Reducción del texto
+    if(resultado[i + 1, 2]=="Los residuos del modelo son normales basado en el test de Shapiro"){
+      resultado[i + 1, 2] <- "Hay normalidad"
+    }else{
+      resultado[i + 1, 2] <- "No hay normalidad"
+    }
+    
+    # Nombre de la columna 3
+    resultado[1, 3] <- "Homocedasticidad"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 3] <- cumplimientoSupuestos(modelos[[i]])[4, 1]
+    resultado[i + 1, 3]
+    #Reducción del texto
+    if(resultado[i + 1, 3]=="Los errores del modelo son homocedastico basado en el test de Breusch-Pagan"){
+      resultado[i + 1, 3] <- "Hay homocedasticidad"
+    }else{
+      resultado[i + 1, 3] <- "No hay homocedasticidad"
+    }
+    
+    
+    # Nombre de la columna 4
+    resultado[1, 4] <- "Independencia"
+    
+    # Se obtiene el resultado de la función cumplimientoSupuestos
+    resultado[i + 1, 4] <- cumplimientoSupuestos(modelos[[i]])[7, 1]
+    resultado[i + 1, 4]
+    #Reducción del texto
+    if(resultado[i + 1, 4]=="Los errores del modelo son independientes basado en el test de Durbin-Watson"){
+      resultado[i + 1, 4] <- "Hay independencia"
+    }else{
+      resultado[i + 1, 4] <- "No hay independencia"
+    }
+    
+    # Nombre de la columna
+    resultado[1, 5] <- "Cumplimiento"
+    
+    if (resultado[i + 1, 2] == "Hay normalidad" & resultado[i + 1, 3]=="Hay homocedasticidad" & resultado[i + 1, 4]=="Hay independencia") {
+      resultado[i + 1, 5] <- "Si"
+    } else {
+      resultado[i + 1, 5] <- "No"
+    }
+  }
+  
+  return(resultado)
+
+}
+```
+
+
+función para encontrar la mejor transformación box y cox (pendiente validar)
+
+```{r}
+mejorBoxYCox<- function(independiente, dependiente,datos){
+  box_cox_result <- boxcox(independiente ~ dependiente, lambda = -2:2, data = datos)
+  
+  # Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+  best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
+
+  # Se ajusta un modelo de regresión lineal utilizando la variable dependiente elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente si es distinta de cero, si es cero se realiza el logaritmo en base de 10 de la variable independiente.
+  if (best_box_cox==0){
+    model <- lm(log10(independiente) ~ dependiente, data = datos)
+    
+  } else {
+    model <- lm((independiente)^(best_box_cox) ~ dependiente, data = datos)
+  }
+  
+  
+  
+  return(cumplimientoSupuestos(model))
+}
+
+
+```
+
+
+
+función grafica con intervalos
+```{r}
+graficaMLIntervalos <- function(modelolineal,independiente,dependiente,dataset){
+  ICcompleto<-predict(modelolineal, interval="confidence",level=0.95)
+  IPcompleto<-predict(modelolineal,newdata=data.frame(independiente), interval="prediction",level=0.95)
+  datos<-data.frame(independiente,dependiente,IPcompleto)             
+
+ grafica <- ggplot(data = datos, mapping = aes(x = independiente, y = precio)) + 
+    geom_point(color = "firebrick", size = 2) + 
+    labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
+    geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
+    geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
+    geom_smooth(method = "lm", se = TRUE, color = "black") + 
+    theme_bw() + theme(plot.title = element_text(hjust = 0.5))
+ 
+ return(grafica)
+}
+
+```
+
+Función para obtener el error absoluto promedio de un modelo 
+```{r}
+# Función para obtener el error absoluto promedio de un modelo
+get_mean_absolute_error <- function(model) {
+  #return(mean(abs(model$residuals)))
+  residuals <- as.numeric(model$residuals)
+  return(mean(abs(residuals)))
+}
+```
+
+
+Funcion obtener errorres de los modelos
+```{r}
+evaluarErrores_modelos <- function(modelos) {
+  # Crear un vector con los nombres de los modelos
+  model_names <- names(modelos)
+  
+  # Calcular los valores de error absoluto promedio para cada modelo en la lista de modelos
+  mean_absolute_error_values <- sapply(modelos, get_mean_absolute_error)
+  
+  # Obtener el índice del modelo con el menor valor de error absoluto promedio
+  min_index <- which.min(mean_absolute_error_values)
+  
+  if (min_index > 0) {
+    # Obtener el nombre del modelo con el menor valor de error absoluto promedio
+    best_model_name <- model_names[min_index]
+    
+    # Obtener el valor del error absoluto promedio del mejor modelo
+    best_error <- mean_absolute_error_values[min_index]
+    
+    # Imprimir el nombre del modelo y el valor del error absoluto promedio
+    cat("El modelo con el menor error absoluto promedio es", best_model_name, "con un error de", best_error, "\n")
+    
+    # Imprimir el modelo con el menor valor de error absoluto promedio
+    cat("El modelo sería:\n")
+    print(modelos[[min_index]])
+  } else {
+    cat("No se pudo determinar el mejor modelo debido a un error en los nombres de los modelos.\n")
+  }
+}
+
+
+```
+
+función curva ROC
+```{r}
+curvaROC <- function(muestra,No.muestra,dataset,x,modelo){
+ #muestra: numero de muestra de la población
+ #No.muestra: No. de datos de la muestra
+ #dataset: Conjunto de datos utilizado
+ #x: Variable predictora
+ #modelo: Modelo utilizado para hacer el ajuste.
+  
+  set.seed(20231)
+  
+
+  entrenamiento<-sample(1:muestra,No.muestra)
+
+  validacion<-c(1:muestra)[-entrenamiento]
+  
+  
+  # Crear una nueva variable binaria para representar 'x'
+  dataset$bin_x <- ifelse(x == "Yes", 1, 0)
+
+  dataset_train<-dataset[entrenamiento,]
+  dataset_test<-dataset[validacion,]
+  bin_x_train<-dataset$bin_x[entrenamiento]
+  table(bin_x_train)
+  
+  bin_x_test<-dataset$bin_x[validacion]
+  dataset_new<-data.frame(dataset_test)
+  dataset_new$origen<-bin_x_test
+  
+  real <- dataset_new$origen
+
+  
+  dataset_new<-data.frame(dataset_test)
+  dataset_new$origen<-bin_x_test
+  # Se obtienen las probabilidades predichas para cada clase 
+  predicciones <- predict(object = modelo, newdata = dataset_new, type = "response") 
+  
+
+  predic <-prediction(predicciones,real)
+  perf <-  performance(predic, "tpr","fpr")
+
+  g=plot(perf,
+     main = "Curva ROC",
+     xlab="Tasa de falsos positivos", 
+     ylab="Tasa de verdaderos positivos")
+  abline(a=0,b=1,col="blue",lty=2)
+  grid()
+  auc <- as.numeric(performance(predic,"auc")@y.values)
+  legend("bottomright",legend=paste(" AUC =",round(auc,4)))
+  return(g)
+}
+```
+
+función metricas
+
+```{r}
+metricas <- function(modelo, dataset, muestra, NoDeLaMuestra, bin_mora) {
+  resultado <- matrix(0, nrow = 6, ncol = 2)
+  
+  set.seed(20231)
+  
+  entrenamiento <- sample(1:muestra, NoDeLaMuestra)
+  validacion <- c(1:muestra)[-entrenamiento]
+  
+  dataset_train <- dataset[entrenamiento, ]
+  dataset_test <- dataset[validacion, ]
+  bin_x_train <- bin_mora[entrenamiento]
+  bin_x_test <- bin_mora[validacion]
+  
+  dataset_new <- data.frame(dataset_test)
+  dataset_new$origen <- bin_x_test
+
+  predicciones <- predict(object = modelo, newdata = dataset_new, type = "response")
+  predict_value <- predicciones
+  
+  pred <- predict_value > 0.5
+  TP <- sum(bin_x_test[pred] == 1)
+  TN <- sum(bin_x_test[!pred] == 0)
+  FP <- sum(bin_x_test[pred] == 0)
+  FN <- sum(bin_x_test[!pred] == 1)
+
+  resultado[1, 1] <- "Metricas"
+  resultado[1, 2] <- "Resultado"
+  
+  resultado[2, 1] <- "precision"
+  resultado[2, 2] <- precision <- TP / (TP + FP)
+  
+  resultado[3, 1] <- "recalln"
+  resultado[3, 2] <- recall <- TP / (TP + FN)
+  
+  resultado[4, 1] <- "f1_score"
+  resultado[4, 2] <- f1_score <- (2 * precision * recall) / (precision + recall)
+  
+  pred_test_RegLog_0_1 <- ifelse(predict_value > 0.5, 1, 0)
+  error_RegLog <- mean(bin_x_test != pred_test_RegLog_0_1) * 100
+  
+  resultado[5, 1] <- "error"
+  resultado[5, 2] <- error_RegLog
+  
+  # Calcular matriz de confusión
+  matriz_confusion <- table(predicciones, bin_x_test)
+  
+  # Calcular métricas
+  #precision <- matriz_confusion[2, 2] / sum(matriz_confusion[, 2])
+  #recall <- matriz_confusion[2, 2] / sum(matriz_confusion[2, ])
+  #f1_score <- 2 * precision * recall / (precision + recall)
+  exactitud <- sum(diag(matriz_confusion)) / sum(matriz_confusion)
+  
+  resultado[6, 1] <- "exactitud"
+  resultado[6, 2] <- exactitud
+  
+  return(resultado)
+}
+```
+
+función metricas para modelos random forest
+
+```{r}
+calcularMetricasRandomForest <- function(modelo, datos, variable_objetivo) {
+  # Realizar predicciones utilizando el modelo
+  predicciones <- predict(modelo, datos)
+  
+  # Calcular matriz de confusión
+  matriz_confusion <- table(predicciones, datos[[variable_objetivo]])
+  
+  # Calcular métricas
+  precision <- matriz_confusion[2, 2] / sum(matriz_confusion[, 2])
+  recall <- matriz_confusion[2, 2] / sum(matriz_confusion[2, ])
+  f1_score <- 2 * precision * recall / (precision + recall)
+  exactitud <- sum(diag(matriz_confusion)) / sum(matriz_confusion)
+  
+  
+  # Crear matriz de resultados
+  resultados <- matrix(0, nrow = 6, ncol = 2)
+  resultados[1, ] <- c("Métrica", "Valor")
+  resultados[2, ] <- c("Precision", precision)
+  resultados[3, ] <- c("Recall", recall)
+  resultados[4, ] <- c("F1-Score", f1_score)
+  resultados[5, ] <- c("Exactitud", exactitud)
+  
+  pred_test_RegLog_0_1 <- ifelse(as.numeric(predicciones) > 0.5, 1, 0)
+  error_RegLog <- mean(datos[[variable_objetivo]] != pred_test_RegLog_0_1) * 100
+  
+  resultados[6, 1] <- "error"
+  resultados[6, 2] <- error_RegLog
+  
+  return(resultados)
+}
+```
+
+
+
+# <span style="color:darkred">Ejercicio 1 </span>
+
+
+
+# <span style="color:darkred">Ejercicio 2 </span>
+
+
+
+# <span style="color:darkred">Ejercicio 3 </span>
+
+
