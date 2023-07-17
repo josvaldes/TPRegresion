@@ -1608,3 +1608,135 @@ error_RegLog
 El valor del error_RegLog es 1.860465, lo que indica que el modelo de regresión logística tiene una tasa de error de clasificación del 1.860465%. Esto significa que aproximadamente el 1.860465% de las muestras en el conjunto de prueba se clasifican incorrectamente por el modelo.
 
 La tasa de error de clasificación es una medida comúnmente utilizada para evaluar el rendimiento de los modelos de clasificación. Un valor bajo de error indica un mejor rendimiento del modelo, mientras que un valor alto indica un rendimiento deficiente. En este caso, un error del 1.860465% sugiere un rendimiento generalmente bueno del modelo de regresión logística.
+
+función metricas
+
+```{r}
+metricas <- function(modelo, dataset, muestra, NoDeLaMuestra, bin_mora) {
+  resultado <- matrix(0, nrow = 6, ncol = 2)
+  
+  set.seed(20231)
+  
+  entrenamiento <- sample(1:muestra, NoDeLaMuestra)
+  validacion <- c(1:muestra)[-entrenamiento]
+  
+  dataset_train <- dataset[entrenamiento, ]
+  dataset_test <- dataset[validacion, ]
+  bin_x_train <- bin_mora[entrenamiento]
+  bin_x_test <- bin_mora[validacion]
+  
+  dataset_new <- data.frame(dataset_test)
+  dataset_new$origen <- bin_x_test
+
+  predicciones <- predict(object = modelo, newdata = dataset_new, type = "response")
+  predict_value <- predicciones
+  
+  pred <- predict_value > 0.5
+  TP <- sum(bin_x_test[pred] == 1)
+  TN <- sum(bin_x_test[!pred] == 0)
+  FP <- sum(bin_x_test[pred] == 0)
+  FN <- sum(bin_x_test[!pred] == 1)
+
+  resultado[1, 1] <- "Metricas"
+  resultado[1, 2] <- "Resultado"
+  
+  resultado[2, 1] <- "precision"
+  resultado[2, 2] <- precision <- TP / (TP + FP)
+  
+  resultado[3, 1] <- "recalln"
+  resultado[3, 2] <- recall <- TP / (TP + FN)
+  
+  resultado[4, 1] <- "f1_score"
+  resultado[4, 2] <- f1_score <- (2 * precision * recall) / (precision + recall)
+  
+  pred_test_RegLog_0_1 <- ifelse(predict_value > 0.5, 1, 0)
+  error_RegLog <- mean(bin_x_test != pred_test_RegLog_0_1) * 100
+  
+  resultado[5, 1] <- "error"
+  resultado[5, 2] <- error_RegLog
+  
+  # Calcular matriz de confusión
+  matriz_confusion <- table(predicciones, bin_x_test)
+  
+  # Calcular métricas
+  #precision <- matriz_confusion[2, 2] / sum(matriz_confusion[, 2])
+  #recall <- matriz_confusion[2, 2] / sum(matriz_confusion[2, ])
+  #f1_score <- 2 * precision * recall / (precision + recall)
+  exactitud <- sum(diag(matriz_confusion)) / sum(matriz_confusion)
+  
+  resultado[6, 1] <- "exactitud"
+  resultado[6, 2] <- exactitud
+  
+  return(resultado)
+}
+```
+
+
+```{r}
+metricas(modelo_logistico4, morosos, 500, 70, morosos$bin_mora)
+```
+Para comparar el modelo se utiliza un clasificador basado en Random forest
+
+```{r}
+#install.packages("randomForest")
+library(randomForest)
+```
+
+
+```{r}
+#morosos_train$bin_mora <- factor(morosos_train$bin_mora)
+morosos_train$estudiante <- factor(morosos_train$estudiante)
+modelo_rf <- randomForest(bin_mora ~ ingreso+estudiante+balance, data = morosos_train, class.factors = TRUE)
+```
+
+```{r}
+#prediccionesrf <- predict(modelo_rf, newdata = morosos_test)
+```
+
+```{r}
+calcularMetricasRandomForest <- function(modelo, datos, variable_objetivo) {
+  # Realizar predicciones utilizando el modelo
+  predicciones <- predict(modelo, datos)
+  
+  # Calcular matriz de confusión
+  matriz_confusion <- table(predicciones, datos[[variable_objetivo]])
+  
+  # Calcular métricas
+  precision <- matriz_confusion[2, 2] / sum(matriz_confusion[, 2])
+  recall <- matriz_confusion[2, 2] / sum(matriz_confusion[2, ])
+  f1_score <- 2 * precision * recall / (precision + recall)
+  exactitud <- sum(diag(matriz_confusion)) / sum(matriz_confusion)
+  
+  
+  # Crear matriz de resultados
+  resultados <- matrix(0, nrow = 6, ncol = 2)
+  resultados[1, ] <- c("Métrica", "Valor")
+  resultados[2, ] <- c("Precision", precision)
+  resultados[3, ] <- c("Recall", recall)
+  resultados[4, ] <- c("F1-Score", f1_score)
+  resultados[5, ] <- c("Exactitud", exactitud)
+  
+  pred_test_RegLog_0_1 <- ifelse(as.numeric(predicciones) > 0.5, 1, 0)
+  error_RegLog <- mean(datos[[variable_objetivo]] != pred_test_RegLog_0_1) * 100
+  
+  resultados[6, 1] <- "error"
+  resultados[6, 2] <- error_RegLog
+  
+  return(resultados)
+}
+```
+
+
+
+```{r}
+morosos_test$estudiante <- factor(morosos_test$estudiante)
+# Calcular métricas de evaluación
+resultados_metricas <- calcularMetricasRandomForest(modelo_rf, morosos_test, "bin_mora")
+```
+
+```{r}
+# Imprimir resultados
+print(resultados_metricas)
+```
+Se observa que el primer modelo es mejor.
+
