@@ -3,6 +3,7 @@ title: "Examen año 2023"
 author: "Jose Valdes"
 date: "2023-07-18"
 output:
+  
   word_document:
     toc: yes
     toc_depth: '5'
@@ -44,7 +45,7 @@ check_packages <- function(packages) {
     )
   }
 }
-packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest","ResourceSelection","vcd","pROC","ROCR","randomForest")
+packages_needed <- c("readxl","ggplot2","MVN","gridExtra","aod","MASS","carData","car","robustbase","leaps","olsrr","gamlss","lsr","ggpubr","lmtest","ResourceSelection","vcd","pROC","ROCR","randomForest","kableExtra","splitstackshape")
 
 # Se llama a la funcion check_packages
 check_packages(packages_needed)
@@ -70,6 +71,8 @@ library(vcd)
 library(pROC)
 library(ROCR)
 library(randomForest)
+library(kableExtra)
+library(splitstackshape)
 
 ```
 
@@ -83,11 +86,11 @@ Respuesta <- matrix(0, nrow = 8, ncol = 1)
 cumplimientoSupuestos <- function(modeloLineal) {
   #Supuesto de normalidad
   Normalidad=shapiro.test(modeloLineal$residuals)
-    if (Normalidad$p.value>0.05){
+    if (Normalidad$p.value>0.01){
       Respuesta[1,1]="Los residuos del modelo son normales basado en el test de Shapiro"
       
       p_value <- Normalidad$p.value
-      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia (0.05), no se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo siguen una distribución normal.")
+      texto <- paste("En este caso, como el valor p (", p_value, ") es mayor que el nivel de significancia (0.01), no se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo siguen una distribución normal.")
       Respuesta[2,1] <- texto
       
       
@@ -96,7 +99,7 @@ cumplimientoSupuestos <- function(modeloLineal) {
       Respuesta[1,1]="Los residuos del modelo no son normales basado en el test de Shapiro"
       
       p_value <- Normalidad$p.value
-      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia (0.05), se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo no siguen una distribución normal.")
+      texto <- paste("En este caso, como el valor p (", p_value, ") es menor que el nivel de significancia (0.01), se tiene suficiente evidencia para rechazar la hipótesis nula de normalidad. Por lo tanto, se puede considerar que los residuos del modelo no siguen una distribución normal.")
       Respuesta[2,1] <- texto
       
       
@@ -242,25 +245,7 @@ mejorBoxYCox<- function(independiente, dependiente,datos){
 
 
 
-función grafica con intervalos
-```{r}
-graficaMLIntervalos <- function(modelolineal,independiente,dependiente,dataset){
-  ICcompleto<-predict(modelolineal, interval="confidence",level=0.95)
-  IPcompleto<-predict(modelolineal,newdata=data.frame(independiente), interval="prediction",level=0.95)
-  datos<-data.frame(independiente,dependiente,IPcompleto)             
 
- grafica <- ggplot(data = datos, mapping = aes(x = independiente, y = precio)) + 
-    geom_point(color = "firebrick", size = 2) + 
-    labs(title = "Diagrama de dispersión con bandas de confianza y predicción", x = "tamanio") + 
-    geom_line(aes(y=lwr), color="red" , linetype="dashed" ) +
-    geom_line(aes(y=upr), color="red" , linetype="dashed" ) +
-    geom_smooth(method = "lm", se = TRUE, color = "black") + 
-    theme_bw() + theme(plot.title = element_text(hjust = 0.5))
- 
- return(grafica)
-}
-
-```
 
 Función para obtener el error absoluto promedio de un modelo 
 ```{r}
@@ -458,14 +443,694 @@ calcularMetricasRandomForest <- function(modelo, datos, variable_objetivo) {
 
 
 
+
 # <span style="color:darkred">Ejercicio 1 </span>
 
+
+```{r}
+data<-read.csv2("C:/Users/Josvaldes/Documents/Maestria/Austral/1ano/regresionAvanzada/TPRegresion/TPRegresion/examen/2023/data_pancreas_resumen.csv")
+data$sexo=as.factor(data$sexo)
+data$diagnosis=as.factor(data$diagnosi)
+data$estadio=as.factor(data$estadio)
+data
+```
+```{r}
+library(splitstackshape)
+set.seed(1082884412)
+strat_data <- stratified(data, "diagnosis", 300/nrow(data))
+```
+
+```{r}
+dim(strat_data)
+```
+
+
+## 1. Construya un modelo lineal simple para explicar el valor de la creatinina en función de alguna de las restantes variables numéricas y evalúe la bondad del ajuste.
+
+```{r}
+modelEje1P1=lm(creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + diagnosis + estadio,data=strat_data)
+summary(modelEje1P1)
+```
+Implementando un modelo lineal ajustado utilizando todas las variables numéricas y categóricas disponibles arroja los siguientes resultados:
+
+La ecuación del modelo es: creatinina = 1.041 * (Intercept) - 0.0107 * edad + 0.05371 * LYVE1 - 0.0001121 * REG1B + 0.0001863 * TFF1 + 0.1393 * sexoM + 0.2473 * diagnosisnormal - 0.0978 * estadioII + 0.1305 * estadioIII + 0.01475 * estadioIV.
+
+Los coeficientes estimados para las variables independientes indican el cambio esperado en el valor de la creatinina cuando cada variable aumenta en una unidad, manteniendo todas las demás variables constantes.
+
+Los valores p asociados a los coeficientes proporcionan una medida de la significancia estadística de cada variable en el modelo. Un valor p menor que el nivel de significancia elegido (0.01) indica que la variable es estadísticamente significativa.
+
+En este caso, las variables "edad", "LYVE1", "TFF1" y "sexoM" tienen valores p menores que 0.01, lo que indica que son variables significativas en relación con la creatinina.
+
+La variable "edad" tiene un valor p de 0.000547, que es menor que el nivel de significancia del 1%. Esto indica que la edad tiene un efecto significativo en el valor de la creatinina. Por cada unidad adicional de edad, se espera una disminución promedio de 0.0107 en el valor de la creatinina, manteniendo todas las demás variables constantes.
+
+La variable "LYVE1" tiene un valor p de 3.06e-05, que es menor que el nivel de significancia del 1%. Esto indica que la proteína LYVE1 tiene un efecto significativo en el valor de la creatinina. Por cada aumento de 1 unidad en la proteína LYVE1, se espera un aumento promedio de 0.05371 en el valor de la creatinina, manteniendo todas las demás variables constantes.
+
+La variable "TFF1" tiene un valor p de 8.65e-06, que es menor que el nivel de significancia del 1%. Esto indica que la proteína TFF1 tiene un efecto significativo en el valor de la creatinina. Por cada aumento de 1 unidad en la proteína TFF1, se espera un aumento promedio de 0.0001863 en el valor de la creatinina, manteniendo todas las demás variables constantes.
+
+La variable "sexoM" tiene un valor p de 0.043375, que es menor que el nivel de significancia del 1%. Esto indica que el sexo masculino tiene un efecto significativo en el valor de la creatinina. En promedio, se espera que los hombres tengan un aumento promedio de 0.1393 en el valor de la creatinina en comparación con las mujeres, manteniendo todas las demás variables constantes.
+
+Las demás variables (REG1B, diagnosis y estadio) no son significativas a un nivel de significancia del 1%. Esto significa que no hay suficiente evidencia para indicar que estas variables tienen un efecto significativo en el valor de la creatinina en el modelo.
+
+Se intenta un nuevo modelo escluyendo estas variables:
+
+```{r}
+model2Eje1P1=lm(creatinina ~ edad + LYVE1 + TFF1 + sexo ,data=strat_data)
+summary(model2Eje1P1)
+```
+Se disminiye el r cuadro al excluir las variables no significartivas.
+
+
+## 2. Realice un análisis diagnóstico y de puntos influyentes e indique si el modelo es adecuado.
+
+```{r}
+# Se valida el cumplimiento de supuestos
+cumplimientoSupuestos(modelEje1P1)
+```
+Se observa que el primer modelo no cumple los supuestos.
+
+modelo 2
+```{r}
+cumplimientoSupuestos(model2Eje1P1)
+```
+El segundo modelo tampoco cumple los supuestos.
+
+
+## 3. Realice una transformación de la variable respuesta para intentar lograr normalidad en la distribución de los residuos. Indique si el modelo con esta transformación resulta adecuado.
+
+
+```{r}
+box_cox_result <- boxcox(creatinina ~ edad + LYVE1 + TFF1 + sexo , lambda = -2:2, data = strat_data)
+```
+Se valida el lamda optimo
+```{r}
+# Se encuentra el valor óptimo de lambda que maximiza el logaritmo de verosimilitud
+best_box_cox <- box_cox_result$x[which.max(box_cox_result$y)]
+best_box_cox
+```
+
+```{r}
+# Se ajusta un modelo de regresión lineal utilizando la variable dependiente "precio" elevada a la potencia óptima de lambda (best_box_cox) como la variable de respuesta y la variable independiente "tamanio".
+modeleje1P3 <- lm((creatinina)^(best_box_cox) ~ edad + LYVE1 + TFF1 + sexo, data = strat_data)
+
+summary(modeleje1P3)
+```
+Con la transformación siguen todas la variables signigicativas segun el test de wald y significativas segun el test F, el r cuadro disminuye.
+
+```{r}
+cumplimientoSupuestos(modeleje1P3)
+```
+Se cumplen los supuestos.
+
+Se prueba la transformación con todas las variables por haber tenido un mejor r cuadro que dejando solo las variables significativas.
+```{r}
+modele2je1P3 <- lm((creatinina)^(best_box_cox) ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis + estadio, data = strat_data)
+
+summary(modele2je1P3)
+```
+```{r}
+cumplimientoSupuestos(modele2je1P3)
+```
+Tambien cumple los supuestos con un mejor r cuadro
+
+Resumen de los modelos utilizados
+```{r}
+resumenCumplimiento(4, modelEje1P1,model2Eje1P1,modeleje1P3,modele2je1P3)
+```
+Los dos modelos con transformación cumplen los supuestos, por tal razon son los que se siguen utilizando.
+
+**Puntos influyentes**
+
+```{r}
+summary(influence.measures(model = modele2je1P3))
+```
+
+Existen varios puntos, se validan bajo ciertos criterios.
+```{r}
+which(dfbetas(modele2je1P3)[,2]>1)
+```
+No existen puntos en este criterio.
+
+```{r}
+n<-length(strat_data$creatinina)
+p<-length(modele2je1P3$coefficients)
+which(dffits(modele2je1P3)>2 * sqrt(p / n))
+```
+Bajo este criterio existen 11 puntos incluyentes.
+
+```{r}
+influencePlot(model = modele2je1P3)
+```
+Se observan algunos puntos del criterio anterior.
+
+```{r}
+influenceIndexPlot(modele2je1P3, vars='Bonf', las=1,col='green')
+```
+Bajo el modelo transformado la prueba de bonferroni no detecta puntos influyentes, se valida sobre uno de los modelos lineales sin transformar.
+```{r}
+influenceIndexPlot(modelEje1P1, vars='Bonf', las=1,col='green')
+```
+Las observaciones de uno de los modelos sin transformar son diferentes a las detectadas con los otros criterios, se entiende que la transformación disminuiria la influencia de esos puntos y por ello permite que se den los cumplimientos de los supuestos.
+
+```{r}
+outlierTest(modele2je1P3)
+```
+
+Para el modelo transformado se observa que si se detecta un punto como outlier, este tambien es detectado en los anteriores criterior como influyente.
+
+```{r}
+outlierTest(modelEje1P1)
+```
+
+para el caso del modelo lineal sin tranformación se confirma que el punto 113 es inlfuyente y outlier.
+
+## 4. Sin considerar la variable estadío, ajuste un modelo multivariado robusto para explicar el valor de la creatinina y estime el error absoluto medio cometido.
+
+```{r}
+ajusterobEje1P4 <- lmrob(creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + diagnosis, data = strat_data)
+summary(ajusterobEje1P4)
+```
+
+```{r}
+set.seed(1082884412) # fijamos una semilla para reproducibilidad
+train <- strat_data %>% sample_frac(0.8)#separamos la base
+test <- strat_data %>% setdiff(train)
+ytest <- test$creatinina  
+
+modeloTRAINEje1P4 <- rlm(creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + diagnosis, data=train, psi=psi.huber)
+predictTEST <- predict(modeloTRAINEje1P4, test)
+RMSEEje1P4 <- caret::RMSE(predictTEST, ytest)
+RMSEEje1P4
+
+```
+RMSE igual a 0.6765536.
+
+Se calcula el RMSE para el mejor modelo lineal
+```{r}
+modeloTRAIN2Eje1P4 <- lm((creatinina)^(best_box_cox) ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis, data=train)
+predictTEST <- predict(modeloTRAIN2Eje1P4, test)
+RMSE2Eje1P4 <- caret::RMSE(predictTEST, ytest)
+RMSE2Eje1P4
+```
+El RMSE del modelo lineal ajustado es levente menor que el del robusto.
+
+## 5. Sin considerar la variable estadío, utilice un método de selección de variables para proponer un nuevo modelo multivariado que explique el valor de la creatinina. Estudie el cumplimiento de los supuestos y haga una transformación en caso de ser necesario. Analice los coeficientes del modelo final.
+
+
+```{r}
+mejores_modelos <- regsubsets(creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis, data = strat_data, nvmax = 6) 
+summary(mejores_modelos)
+```
+El resultado muestra las variables que fueron incluidas en cada tamaño de subconjunto. Por ejemplo, el primer subconjunto incluye solo la variable "TFF1", el segundo subconjunto incluye "edad" y "TFF1", el tercer subconjunto incluye "edad", "LYVE1" y "TFF1", y así sucesivamente hasta el sexto subconjunto, que incluye todas las variables.
+
+```{r}
+summary(mejores_modelos)$adjr2
+```
+```{r}
+# se identifica qué modelo tiene el valor máximo de R ajustado 
+which.max(summary(mejores_modelos)$adjr2)
+```
+El mejor r cuadro es el modelo 5, r cuadro de 0.2387975.
+
+```{r}
+library(ggplot2) 
+p <- ggplot(data = data.frame(n_predictores = 1:6, R_ajustado = summary(mejores_modelos)$adjr2), aes(x = n_predictores, y = R_ajustado)) + 
+  geom_line() + 
+  geom_point() 
+# Se identifica en rojo el máximo 
+p <- p + geom_point(aes(x=n_predictores[which.max(summary(mejores_modelos)$adjr2)], y=R_ajustado[which.max(summary(mejores_modelos)$adjr2)]), colour = "red", size = 3) 
+p <- p + scale_x_continuous(breaks = c(0:5)) + theme_bw() + 
+  labs(title = "R2_ajustado vs número de predictores", x = "número predictores") 
+p
+```
+La cantidad de predictores que maximiza el r cuadrado es con 5 predictores.
+
+```{r}
+# coeficientes del modelo No. 5
+coef(object = mejores_modelos, id = 5)
+```
+Se confirmar con otros metodos de selección de variables
+```{r}
+mejores_modelos_backward <- regsubsets(creatinina ~ edad + LYVE1 + REG1B + TFF1 + 
+    sexo + diagnosis, data = strat_data, nvmax = 6, method = "backward") 
+# se identifica el valor máximo de R ajustado 
+which.max(summary(mejores_modelos_backward)$adjr2)
+```
+Se sigue obteniendo el mismo modelo.
+
+```{r}
+coef(object = mejores_modelos_backward, 5)
+```
+igual.
+
+```{r}
+lm.fit1 <- lm(creatinina ~ edad + LYVE1 + REG1B + TFF1 + 
+    sexo + diagnosis, data = strat_data)
+k <- ols_step_all_possible(lm.fit1)
+
+# AIC: Akaike Information Criteria 
+# SBIC: Sawa's Bayesian Information Criteria 
+# SBC: Schwarz Bayesian Criteria 
+# MSEP: Estimated error of prediction, assuming multivariate normality 
+# FPE: Final Prediction Error 
+# HSP: Hocking's Sp 
+# APC: Amemiya Prediction Criteria
+
+k
+```
+
+```{r}
+plot(k)# el eje horizontal representa la cantidad de variables utilizadas en cada modelo.
+```
+Se confirma que las cinco variables utilizaas son las mejores para el modelo.
+
+```{r}
+k_best <- ols_step_best_subset(lm.fit1)
+
+# AIC: Akaike Information Criteria 
+# SBIC: Sawa's Bayesian Information Criteria 
+# SBC: Schwarz Bayesian Criteria 
+# MSEP: Estimated error of prediction, assuming multivariate normality 
+# FPE: Final Prediction Error 
+# HSP: Hocking's Sp 
+# APC: Amemiya Prediction Criteria
+
+k_best
+```
+
+```{r}
+plot(k_best)# el eje horizontal representa la cantidad de variables utilizadas en cada modelo.
+```
+Se observa que por lo metodos indirectos se confirma que seleccionando 5 variables se maximiza el modelo, aunque en algunos muestra que puede ser algo parecido con 4 variables, habria que realizar mas pruebas, por lo pronto se mantienen las 5 variables. 
+
+En tal sentido, los modelos tranformados con 5 variables que cumplen los supuestos en los puntos anteriores estarian construidos con las mejores variables del conjunto de datos.
+
+## 6. Estime los errores de predicción de los 4 modelos previos y compárelos. Cuál elegiría?
+
+El RMSE se desarrollo en puntos anteriores entre el mejor modelo transformado (0.6741386) y el robusto (0.676536), se observo que son muy parecidos, por los resultados se puede concluir que se podria elegir cualquiera de los dos, la diferencia minima entre ambos es 0,0023974. Por ser menor se eligiria el modelo transformado con 5 variables.
+
+## 7. Le parece adecuado un modelo GAMLSS en este caso? Justifique.
+
+```{r}
+mod_OLS <- gamlss( formula = creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis, family = NO, data = strat_data, trace = FALSE)
+summary(mod_OLS)
+```
+
+Para el parámetro de ubicación (Mu):
+
+La función de enlace utilizada es la identidad, lo que implica que los predictores se asocian linealmente con el valor esperado de la variable de respuesta "creatinina".
+Los coeficientes estimados para las variables predictoras "edad", "LYVE1", "REG1B", "TFF1", "sexo" y "diagnosis" indican la dirección y la magnitud de la relación con el valor esperado de la creatinina.
+Los valores p asociados a cada coeficiente indican la significancia estadística de cada variable en relación con la creatinina. Un valor p menor que el nivel de significancia elegido (por ejemplo, 0.05) indica que la variable es estadísticamente significativa.
+Para el parámetro de escala (Sigma):
+
+La función de enlace utilizada es log, lo que implica que el predictor correspondiente al parámetro de escala se asocia con el logaritmo de la desviación estándar de la variable de respuesta "creatinina".
+El coeficiente estimado para el intercepto indica el logaritmo de la desviación estándar de la creatinina.
+
+
+```{r}
+cumplimientoSupuestos(mod_OLS)
+```
+No se cumplen los supuestos del modelo.
+
+```{r}
+wp(mod_OLS)
+```
+La inspección visual del wormplot indica que este modelo no tiene los residuos dentro del rango de variación
+aceptable.
+
+```{r}
+mod_GAMLSS <- gamlss(formula = creatinina ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis, sigma.formula = ~ edad + LYVE1 + REG1B + TFF1 + sexo + 
+    diagnosis, family = GA, data = strat_data, trace = FALSE )
+summary(mod_GAMLSS)
+```
+
+Se observan variables que no son significativas y se podrian retirar, antes se comprueba los cumplimientos del modelo.
+
+```{r}
+cumplimientoSupuestos(mod_GAMLSS)
+```
+No se cumplen los supuestos.
+
+```{r}
+# Efecto individuales de los Predictores (GAMLSS)
+term.plot(mod_GAMLSS, parameter = 'sigma',ask = FALSE, rug = TRUE)
+```
+Se observa que la contribución de los predictores al modelo tiene un comportamiento lineal, esto nos dice que un modelo GAMLSS no es necesario.
+
+Se intenta otro modelo retirando las variables que no son significativas.
+
+```{r}
+# Worm plot de los residuos modelo 1
+wp(mod_GAMLSS, ylim.all = 0.5)
+```
+La inspección visual del wormplot indica que este modelo tiene los residuos dentro del rango de variación
+aceptable.
+
+```{r}
+mod_GAMLSS2 <- gamlss(formula = creatinina ~ edad + LYVE1 + TFF1 + sexo + 
+    diagnosis, sigma.formula = ~ LYVE1 + 
+    diagnosis, family = GA, data = strat_data, trace = FALSE )
+summary(mod_GAMLSS2)
+```
+
+```{r}
+cumplimientoSupuestos(mod_GAMLSS2 )
+```
+No se cumple homocedasticidad. Para este tipo de modelos se flexibiliza el cumplimiento de todos los supuestos.
+
+```{r}
+# Worm plot de los residuos modelo 1
+wp(mod_GAMLSS2, ylim.all = 0.5)
+```
+La inspección visual del wormplot indica que este modelo tiene los residuos dentro del rango de variación
+aceptable.
+
+Comparación de modelos
+```{r}
+#Comparamos los modelos ajustados:
+GAIC(mod_OLS,mod_GAMLSS, mod_GAMLSS2)
+```
+Se observa que de los modelos GAMLSS el mejor seria mod_GAMLSS2, esto por tener un menor AIC. El modelo GAMLSS2 es el que mejor explica la relación con el creatinina utilizando los mismos predictores.
+
+En tal sentido, tambien se puede utilizar modelos GAMLSS debido a que con estos se puede analizar conjuntos de datos que tengan comportamientos no lineales (no es para el caso tratado) y exista presencia de heterocedasticidad (aspecto que se vio en el cumplimiento de supuestos).
+
+Por el hecho de no presentar predictores no lineales se puede trabajar con el modelo lineal tranformado que cumple los supuestos.
 
 
 # <span style="color:darkred">Ejercicio 2 </span>
 
+Estudie analítica y gráficamente si:
+## 1. existen diferencias estadísticamente significativas en las medias de los valores de creatinina respecto de la variable estadío.
 
+Para evaluar si existen diferencias estadísticamente significativas en las medias de los valores de creatinina con respecto a la variable "estadío", se puedes realizar un análisis de ANOVA (Análisis de Varianza) o una prueba no paramétrica, como la prueba de Kruskal-Wallis.
+
+```{r}
+# Realizar análisis de ANOVA
+modelo_anova <- aov(creatinina ~ estadio, data = strat_data)
+
+# Obtener los resultados del análisis
+resultados_anova <- summary(modelo_anova)
+
+# Imprimir los resultados
+print(resultados_anova)
+```
+
+La significancia estadística se determina comparando el valor p con el nivel de significancia establecido (por ejemplo, 0.05). En este caso, como el valor p (0.0377) es menor que 0.05, se concluye que existe una diferencia estadísticamente significativa en las medias de los valores de creatinina entre los diferentes niveles de "estadio".
+
+Si no se cumple los supuestos del modelo anova se aplica la prueba de Kruskal-Wallis
+
+```{r}
+# Realizar prueba de Kruskal-Wallis
+resultado_kruskal <- kruskal.test(creatinina ~ estadio, data = strat_data)
+
+# Imprimir el resultado
+print(resultado_kruskal)
+```
+El valor p obtenido (0.0668) indica que no se alcanza un nivel de significancia estadística (por ejemplo, 0.05), lo cual significa que no hay suficiente evidencia para concluir que existen diferencias estadísticamente significativas en las medianas de los valores de creatinina entre los diferentes niveles de "estadio".
+
+Sin embargo, es importante tener en cuenta que el valor p está cerca del umbral de significancia, por lo que es posible que haya cierta evidencia sugiriendo diferencias en las medianas. Dado que el valor p es mayor que 0.05, no se puede rechazar la hipótesis nula de que las medianas son iguales.
+
+
+```{r}
+p1 <- ggplot(data = strat_data, mapping = aes(x = estadio, y = creatinina)) + geom_boxplot() + 
+  theme_bw() 
+p2 <- ggplot(data = strat_data, mapping = aes(x = LYVE1, y = creatinina)) + geom_boxplot() + 
+  theme_bw() 
+p3 <- ggplot(data = strat_data, mapping = aes(x = estadio, y = creatinina, colour = LYVE1)) + 
+  geom_boxplot() + theme_bw() 
+grid.arrange(p1, p2,p3, ncol = 2)
+```
+Graficamente se observa una leve diferencia entre las medianas de los boxplot, lo observado en los test.
+
+## 2. existen diferencias estadísticamente significativas en las medias de los valores de creatinina respecto de la variable estadío considerando sólo la base de pacientes enfermos.
+
+```{r}
+# Filtrar la base de datos para obtener solo pacientes enfermos
+enfermos <- subset(strat_data, diagnosis == "maligno")
+
+# Realizar análisis de ANOVA en el subconjunto de pacientes enfermos
+modelo_anova_enfermos <- aov(creatinina ~ estadio, data = enfermos)
+
+# Obtener los resultados del análisis
+resultados_anova_enfermos  <- summary(modelo_anova_enfermos )
+
+# Imprimir los resultados
+print(resultados_anova_enfermos )
+```
+
+En este caso, el valor p (0.0561) es ligeramente mayor que 0.05, pero se acerca a la significancia estadística. Esto sugiere que podría existir una diferencia en las medias de los valores de creatinina entre los diferentes niveles de "estadio" en el subconjunto de pacientes enfermos, aunque no es estadísticamente significativa de manera concluyente.
+
+
+```{r}
+# Filtrar la base de datos para obtener solo pacientes enfermos
+enfermos_kruskal <- subset(strat_data, diagnosis == "maligno")
+
+# Realizar prueba de Kruskal-Wallis en el subconjunto de pacientes enfermos
+resultado_kruskal_enfermos <- kruskal.test(creatinina ~ estadio, data = enfermos_kruskal )
+
+# Imprimir el resultado
+print(resultado_kruskal_enfermos)
+```
+El valor p obtenido (0.03348) indica que se alcanza un nivel de significancia estadística (por ejemplo, 0.05), lo cual significa que existe evidencia suficiente para concluir que hay diferencias estadísticamente significativas en las medianas de los valores de creatinina entre los diferentes niveles de "estadio" en el subconjunto de pacientes enfermos.
+
+Por lo tanto, con base en la prueba de Kruskal-Wallis, se puede concluir que existe una diferencia estadísticamente significativa en las medianas de los valores de creatinina entre los diferentes niveles de "estadio" en el subconjunto de pacientes enfermos.
+
+```{r}
+p11 <- ggplot(data = enfermos_kruskal, mapping = aes(x = estadio, y = creatinina)) + geom_boxplot() + 
+  theme_bw() 
+p22 <- ggplot(data = enfermos_kruskal, mapping = aes(x = LYVE1, y = creatinina)) + geom_boxplot() + 
+  theme_bw() 
+p33 <- ggplot(data = enfermos_kruskal, mapping = aes(x = estadio, y = creatinina, colour = LYVE1)) + 
+  geom_boxplot() + theme_bw() 
+grid.arrange(p11, p22, p33, ncol = 2)
+```
+Graficamente se observa que existe diferencia estadistica entre las medias de los niveles de los pacientes enfermos.
+
+## 3. existen diferencias estadísticamente significativas en las medias de los valores de creatinina respecto del sexo.
+
+```{r}
+# Realizar análisis de ANOVA
+modelo_anova_sexo <- aov(creatinina ~ sexo, data = strat_data)
+
+# Obtener los resultados del análisis
+resultados_anova_sexo <- summary(modelo_anova_sexo)
+
+# Imprimir los resultados
+print(resultados_anova_sexo)
+```
+En este caso, el valor p (0.0101) es menor que 0.05, por lo que se concluye que existe una diferencia estadísticamente significativa en las medias de los valores de creatinina entre hombres y mujeres.
+
+
+## 4. la interacción entre estadío y sexo es significativa cuando se considera la base completa.
+
+```{r}
+# Realizar análisis de ANOVA con interacción
+modelo_anova_interaccion <- aov(creatinina ~ estadio * sexo, data = strat_data)
+
+# Obtener los resultados del análisis
+resultados_anova_interaccion <- summary(modelo_anova_interaccion)
+
+# Imprimir los resultados
+print(resultados_anova_interaccion)
+```
+La interacción entre las variables sexo y estadio son significativas teniendo un nivel de significancia de 0.1.Individualmente cumplen un nivel de significancia de 0.05.
+
+## 5. se satisfacen los supuestos del modelo en 1, 2 y 3. En caso negativo intente una transformación adecuada sobre la variable respuesta en cada modelo y revise nuevamente los supuestos.
+
+supuestos modelos anova
+```{r}
+#modelo 1=modelo_anova
+cumplimientoSupuestos(modelo_anova)[1,1] #La funcion es creada para modelos lineales, solo para comprobar la normalidad por shapiro
+```
+```{r}
+leveneTest(creatinina~estadio,data=strat_data)
+```
+Es homogenia la varianza
+
+```{r}
+boxcox(creatinina~estadio,data=strat_data,plotit=TRUE)
+```
+```{r}
+box_cox_resultEje2P5 <- boxcox(creatinina ~ estadio , lambda = -2:2, data = strat_data)
+```
+
+```{r}
+best_box_coxEje2P5 <- box_cox_resultEje2P5$x[which.max(box_cox_result$y)]
+best_box_coxEje2P5
+```
+```{r}
+
+# Realizar análisis de ANOVA
+modelo_anovaEje2P5 <- aov((creatinina)^(best_box_coxEje2P5) ~ estadio, data = strat_data)
+
+# Obtener los resultados del análisis
+resultados_anovaEje2P5 <- summary(modelo_anovaEje2P5)
+
+# Imprimir los resultados
+print(resultados_anovaEje2P5)
+
+
+
+```
+Singnificativa 
+```{r}
+cumplimientoSupuestos(modelo_anovaEje2P5)[1,1]
+```
+La transformación permite el cumplimiento de normalidad
+
+
+
+```{r}
+#modelo 2=modelo_anova_enfermos
+cumplimientoSupuestos(modelo_anova_enfermos)[1,1]
+```
+
+```{r}
+leveneTest(creatinina~estadio,data=enfermos)
+```
+Es homogenia la varianza
+
+
+```{r}
+# Realizar análisis de ANOVA
+modelo_anova2Eje2P5 <- aov((creatinina)^(best_box_coxEje2P5) ~ estadio, data = enfermos)
+
+# Obtener los resultados del análisis
+resultados_anova2Eje2P5 <- summary(modelo_anova2Eje2P5)
+
+# Imprimir los resultados
+print(resultados_anova2Eje2P5)
+```
+significativo
+
+```{r}
+cumplimientoSupuestos(modelo_anova2Eje2P5)[1,1]
+```
+
+Con la transformación se cumple normalidad.
+
+
+```{r}
+#modelo 3=resultados_anova_sexo 
+cumplimientoSupuestos(modelo_anova_sexo)[1,1]
+```
+```{r}
+leveneTest(creatinina~sexo,data=strat_data)
+```
+Es homogenia la varianza
+
+```{r}
+# Realizar análisis de ANOVA
+modelo_anova3Eje2P5 <- aov((creatinina)^(best_box_coxEje2P5) ~ sexo, data = strat_data)
+
+# Obtener los resultados del análisis
+resultados_anova3Eje2P5 <- summary(modelo_anova3Eje2P5)
+
+# Imprimir los resultados
+print(resultados_anova3Eje2P5)
+```
+significativo.
+
+```{r}
+#modelo 3=resultados_anova_sexo 
+cumplimientoSupuestos(modelo_anova3Eje2P5)[1,1]
+```
+Con la transformación se cumple normalidad.
+
+## 6. Obtenga conclusiones acerca de dónde se observan las diferencias si las hubiere.
+
+Las diferencias se observan en el nivel III y IV de la variable estadio.
 
 # <span style="color:darkred">Ejercicio 3 </span>
 
+## 1. Ajuste un modelo logístico para predecir el diagnóstico de cáncer de páncreas en función de las variables en la base que considere razonables.
+
+```{r}
+# Crear una nueva variable binaria para representar 'diagnosis'
+strat_data$bin_diagnosis <- ifelse(strat_data$diagnosis == "maligno", 1, 0)
+
+# Ajustar el modelo logístico con la nueva variable binaria
+modelo_logistico <- glm(bin_diagnosis ~ edad , data = strat_data, family = "binomial")
+
+# Realizar el análisis del modelo
+summary(modelo_logistico)
+```
+El coeficiente estimado para "edad" es de 0.07451, lo que significa que por cada aumento de un año en la edad, la log-odds de tener un diagnóstico positivo de cáncer de páncreas aumenta en promedio 0.07451 unidades.
+
+El coeficiente de intercepción es de -4.53167, lo que indica que cuando la edad es igual a cero (lo cual no tiene sentido práctico en este contexto), la log-odds de tener un diagnóstico positivo de cáncer de páncreas es de -4.53167.
+
+Ambos coeficientes tienen errores estándar asociados y valores de p. El coeficiente para "edad" tiene un valor de p extremadamente bajo (2.38e-10), lo que indica que es altamente significativo y sugiere una relación estadísticamente significativa entre la edad y el diagnóstico de cáncer de páncreas.
+
+La desviación residual es de 365.70 y el AIC (criterio de información de Akaike) es de 369.7. Estos valores se utilizan para comparar modelos alternativos, donde valores más bajos indican un mejor ajuste.
+
+## 2. Evalúe la calidad de ajuste del modelo con al menos dos criterios distintos.
+
+```{r}
+# Obtener la deviance nula
+null_deviance <- as.numeric(anova(modelo_logistico, test = "Chisq")$Deviance[1])
+
+# Obtener la deviance residual
+deviance_residual <- deviance(modelo_logistico)
+
+# Obtener los grados de libertad
+null_df <- as.numeric(anova(modelo_logistico, test = "Chisq")$Df[1])
+residual_df <- df.residual(modelo_logistico)
+
+# Calcular el valor de p para el test de chi-cuadrado
+p_value <- pchisq(null_deviance - deviance_residual, df = null_df - residual_df, lower.tail = FALSE)
+
+
+# Calcular el AIC y BIC
+AIC <- AIC(modelo_logistico)
+BIC <- BIC(modelo_logistico)
+
+
+print(paste("El el criterio de AIC del modelo logistico es : ",AIC))
+
+print(paste("El el criterio de BIC del modelo logistico es : ",BIC))
+
+```
+Se calcula para el mejor modelo obtenido en los puntos anteriores
+
+```{r}
+
+
+# Calcular el AIC y BIC
+AIC2 <- AIC(modele2je1P3)
+BIC2 <- BIC(modele2je1P3)
+
+
+print(paste("El el criterio de AIC del modelo lineal transformado es : ",AIC2))
+
+print(paste("El el criterio de BIC del modelo lineal transformado es : ",BIC2))
+```
+El resultado muestra que por los criterios de AIC y BIC es mejor el modelo lineal ajustado. Hay que tener en cuenta que el lineal usa 5 variables y el logistico solo 1.
+
+## 3. Interprete los coeficientes del modelo elegido.
+
+```{r}
+# Extraer los coeficientes del modelo logístico y asignarlos a variables individuales
+intercepto <- modelo_logistico$coefficients["(Intercept)"]
+coef_edad <- modelo_logistico$coefficients["edad"]
+
+
+# Conversion razon odd (relación de probabilidades)
+oddIntercepto=exp(intercepto)
+oddEdad=exp(coef_edad)
+
+
+# probabilidad
+
+probabilidad_oddIntercepto=(oddIntercepto/(1+oddIntercepto))*100
+probabilidad_oddEdad=(oddEdad/(1+oddEdad))*100
+
+
+print(paste("El coefiente transformado del intercepto es: ",oddIntercepto, ", la probabilidad de éxito del evento seria ", probabilidad_oddIntercepto, "%"))
+
+print(paste("El coefiente transformado de la variable Edad es: ",oddEdad,", la probabilidad de éxito del evento seria ",probabilidad_oddEdad, "%"))
+```
 
